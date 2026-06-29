@@ -1,9 +1,9 @@
 name: Publish iOS — App Store Connect
 
+# Triggered manually, or called by the Release workflow (release.yml).
+# Tag pushes do NOT publish directly — use the Release workflow so versions are
+# bumped and tagged in one place (prevents double publishing).
 on:
-  push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
   workflow_dispatch:
     inputs:
       destination:
@@ -12,6 +12,26 @@ on:
         default: "testflight"
         type: choice
         options: [testflight, appstore]
+      dry_run:
+        description: "Build & sign the IPA but do NOT upload to App Store Connect"
+        required: false
+        default: false
+        type: boolean
+  workflow_call:
+    inputs:
+      destination:
+        required: false
+        default: "testflight"
+        type: string
+      dry_run:
+        required: false
+        default: false
+        type: boolean
+      ref:
+        description: "Git ref (tag/branch/sha) to build"
+        required: false
+        default: ""
+        type: string
 
 # ── Required GitHub Secrets ─────────────────────────────────────────────────
 # CERTIFICATES_P12             base64-encoded Apple Distribution .p12 cert
@@ -25,11 +45,13 @@ on:
 
 jobs:
   publish-ios:
-    name: Build & publish IPA → ${{ github.event.inputs.destination || 'testflight' }}
+    name: Build & publish IPA → ${{ inputs.destination || 'testflight' }}
     runs-on: macos-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - uses: actions/setup-node@v4
         with:
@@ -98,13 +120,14 @@ jobs:
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ios-release-ipa-${{ github.ref_name }}
+          name: ios-release-ipa-${{ github.run_id }}
           path: ${{ runner.temp }}/JSPlayer/JSPlayer.ipa
           retention-days: 30
 
       - name: Upload to App Store Connect
+        if: ${{ !inputs.dry_run }}
         env:
-          DESTINATION: ${{ github.event.inputs.destination || 'testflight' }}
+          DESTINATION: ${{ inputs.destination || 'testflight' }}
         run: |
           xcrun altool \
             --upload-app \
@@ -112,3 +135,7 @@ jobs:
             --file "$RUNNER_TEMP/JSPlayer/JSPlayer.ipa" \
             --apiKey "${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}" \
             --apiIssuer "${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}"
+
+      - name: Dry run — skipped App Store Connect upload
+        if: ${{ inputs.dry_run }}
+        run: echo "dry_run=true → signed IPA built and uploaded as an artifact, but NOT published to App Store Connect."

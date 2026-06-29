@@ -1,0 +1,138 @@
+name: Release — bump, tag & publish
+
+# One-click release. From the Actions tab choose "Run workflow", enter the
+# version and pick the store(s). This bumps the web + native version numbers,
+# commits and tags vX.Y.Z, then publishes to Google Play and/or App Store
+# Connect via the reusable publish workflows.
+#
+# Requires the publishing secrets to be configured (see docs/PIPELINE.md).
+# Use dry_run=true to build & sign without uploading to the stores.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Marketing version X.Y.Z (no leading v)"
+        required: true
+        type: string
+      platforms:
+        description: "Which store(s) to publish to"
+        required: true
+        default: both
+        type: choice
+        options: [both, android, ios]
+      android_track:
+        description: "Google Play track"
+        required: true
+        default: internal
+        type: choice
+        options: [internal, alpha, beta, production]
+      ios_destination:
+        description: "Apple destination"
+        required: true
+        default: testflight
+        type: choice
+        options: [testflight, appstore]
+      dry_run:
+        description: "Build & sign but do NOT upload to the stores"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    name: Bump version & tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate version
+        run: |
+          if ! printf '%s' "${{ inputs.version }}" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::version must be X.Y.Z (got '${{ inputs.version }}')"
+            exit 1
+          fi
+
+      - name: Bump version (web + Android + iOS)
+        id: bump
+        env:
+          VERSION: ${{ inputs.version }}
+          BUILD: ${{ github.run_number }}
+        run: |
+          # package.json (source of truth for the marketing version)
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+
+          # Android: versionName = marketing version, versionCode = monotonic build number
+          sed -i -E "s/versionCode [0-9]+/versionCode ${BUILD}/" android/app/build.gradle
+          sed -i -E "s/versionName \"[^\"]*\"/versionName \"${VERSION}\"/" android/app/build.gradle
+
+          # iOS: MARKETING_VERSION + CURRENT_PROJECT_VERSION (both build configs)
+          sed -i -E "s/MARKETING_VERSION = [^;]+;/MARKETING_VERSION = ${VERSION};/g" ios/App/App.xcodeproj/project.pbxproj
+          sed -i -E "s/CURRENT_PROJECT_VERSION = [0-9]+;/CURRENT_PROJECT_VERSION = ${BUILD};/g" ios/App/App.xcodeproj/project.pbxproj
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Commit & tag
+        env:
+          VERSION: ${{ inputs.version }}
+          BUILD: ${{ github.run_number }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json \
+            android/app/build.gradle ios/App/App.xcodeproj/project.pbxproj
+          git commit -m "chore(release): v${VERSION} (build ${BUILD})"
+          git tag "v${VERSION}"
+          git push origin "HEAD:${{ github.ref_name }}"
+          git push origin "v${VERSION}"
+
+  android:
+    name: Android
+    needs: prepare
+    if: ${{ inputs.platforms == 'both' || inputs.platforms == 'android' }}
+    uses: ./.github/workflows/publish-android.yml
+    secrets: inherit
+    with:
+      track: ${{ inputs.android_track }}
+      dry_run: ${{ inputs.dry_run }}
+      ref: v${{ needs.prepare.outputs.version }}
+
+  ios:
+    name: iOS
+    needs: prepare
+    if: ${{ inputs.platforms == 'both' || inputs.platforms == 'ios' }}
+    uses: ./.github/workflows/publish-ios.yml
+    secrets: inherit
+    with:
+      destination: ${{ inputs.ios_destination }}
+      dry_run: ${{ inputs.dry_run }}
+      ref: v${{ needs.prepare.outputs.version }}
+
+  github-release:
+    name: GitHub Release
+    needs: [prepare, android, ios]
+    # Run whenever the publish jobs didn't fail (skipped platforms are OK), but
+    # never on a dry run.
+    if: ${{ !cancelled() && !inputs.dry_run && needs.android.result != 'failure' && needs.ios.result != 'failure' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.prepare.outputs.version }}
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.prepare.outputs.version }}
+          generate_release_notes: true
+          draft: false

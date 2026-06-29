@@ -268,12 +268,21 @@ npx cap sync
 
 ---
 
-## CI/CD Automation (optional)
+## CI/CD Automation (recommended)
 
-See `.github/workflows/release.yml` in the root repo for a GitHub Actions pipeline that:
-- Runs tests
-- Builds the AAB automatically on version tags
-- Uploads to Google Play Internal Track via Fastlane
+Instead of the manual steps above, you can publish straight from GitHub Actions:
+
+1. **Actions → "Release — bump, tag & publish" → Run workflow**
+2. Enter the version (`X.Y.Z`), pick the store(s) and track/destination
+3. (Optional) tick **dry_run** to build & sign without uploading — a safe rehearsal
+
+The workflow bumps the web + native version numbers, tags `vX.Y.Z`, builds the
+**signed** AAB/IPA, and uploads to Google Play / App Store Connect. It needs the
+publishing secrets configured once — see
+[`docs/PIPELINE.md`](docs/PIPELINE.md) for the full secret list and setup.
+
+Underlying reusable workflows: `.github/workflows/publish-android.yml` and
+`.github/workflows/publish-ios.yml` (also runnable on their own).
 
 ---
 

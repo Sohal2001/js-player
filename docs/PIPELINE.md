@@ -52,9 +52,41 @@ Push to feature branch
 | File | Trigger | Purpose |
 |------|---------|---------|
 | `.github/workflows/ci.yml` | push / PR | Tests (unit + integration + functional), lint, format, build, E2E |
-| `.github/workflows/publish-android.yml` | version tag / manual | Build AAB → Google Play |
-| `.github/workflows/publish-ios.yml` | version tag / manual | Build IPA → App Store Connect |
+| `.github/workflows/release.yml` | manual | **One-click release** — bump version, tag, and publish to the selected store(s) |
+| `.github/workflows/publish-android.yml` | manual / called by Release | Build signed AAB → Google Play |
+| `.github/workflows/publish-ios.yml` | manual / called by Release | Build signed IPA → App Store Connect |
 | `.github/dependabot.yml` | schedule | Weekly npm + GitHub Actions updates, monthly Gradle |
+
+## One-click Release (`release.yml`)
+
+The simplest way to ship. **Actions → "Release — bump, tag & publish" → Run
+workflow**, then fill in:
+
+| Input | Meaning |
+|-------|---------|
+| `version` | Marketing version `X.Y.Z` (no leading `v`) |
+| `platforms` | `both`, `android`, or `ios` |
+| `android_track` | `internal` / `alpha` / `beta` / `production` |
+| `ios_destination` | `testflight` / `appstore` |
+| `dry_run` | Build & sign but **don't** upload to the stores (safe rehearsal) |
+
+What it does:
+
+1. **prepare** — bumps `package.json`, `android/app/build.gradle`
+   (`versionName` + `versionCode`) and the iOS Xcode project
+   (`MARKETING_VERSION` + `CURRENT_PROJECT_VERSION`), commits, and pushes tag
+   `vX.Y.Z`. The native build numbers use the workflow run number so each upload
+   is strictly increasing (stores reject re-used build numbers).
+2. **android / ios** — calls the reusable publish workflows for the selected
+   platform(s), building from the freshly-created tag.
+3. **github-release** — creates a GitHub Release for the tag (skipped on dry runs).
+
+> Requires the publishing secrets below. With branch protection on `main`, allow
+> the `github-actions` bot to push the version-bump commit (or run the release
+> from an unprotected branch).
+>
+> Tag pushes no longer publish on their own — the Release workflow owns tagging
+> so versioning and publishing happen in one place (and never twice).
 
 ---
 
@@ -130,16 +162,12 @@ Cancels in-progress runs when a new commit is pushed to the same branch.
 
 ## Android Publish Workflow (`publish-android.yml`)
 
-### Trigger options
+### How it runs
 
-```bash
-# Option 1: version tag
-git tag v1.2.0
-git push --tags
-
-# Option 2: manual from GitHub Actions tab
-# → choose track: internal / alpha / beta / production
-```
+- **Via the Release workflow** (recommended) — handled automatically when you
+  run `release.yml`.
+- **Standalone** — Actions → **Publish Android** → Run workflow → choose the
+  track (and `dry_run` to skip the actual upload).
 
 ### Required secrets
 
@@ -207,16 +235,15 @@ bundle exec fastlane promote_production
 
 ## iOS Publish Workflow (`publish-ios.yml`)
 
-### Trigger options
+### How it runs
 
-```bash
-# Option 1: version tag (same as Android)
-git tag v1.2.0
-git push --tags
+- **Via the Release workflow** (recommended) — handled automatically when you
+  run `release.yml`.
+- **Standalone** — Actions → **Publish iOS** → Run workflow → choose
+  `testflight` / `appstore` (and `dry_run` to skip the actual upload).
 
-# Option 2: manual
-# → choose: testflight / appstore
-```
+> iOS publishing must run on a macOS runner — the workflow already sets
+> `runs-on: macos-latest`.
 
 ### Required secrets
 
@@ -266,42 +293,29 @@ TestFlight build   →  internal testers (immediate)
 
 ## Versioning
 
-All three workflows are triggered by the same version tag pattern: `v[0-9]+.[0-9]+.[0-9]+`
+The **Release workflow handles versioning for you** — you just enter `X.Y.Z`
+and it updates `package.json`, the Android `build.gradle`, and the iOS Xcode
+project, then tags `vX.Y.Z`. The native build numbers come from the run number
+so every store upload strictly increases.
 
-### Releasing a new version
+If you ever need to bump versions by hand (e.g. for a local build):
 
 ```bash
-# 1. Update version in package.json
-npm version patch      # 1.0.0 → 1.0.1
-npm version minor      # 1.0.0 → 1.1.0
-npm version major      # 1.0.0 → 2.0.0
-
-# 2. Update native version numbers
-#    Android: android/app/build.gradle → versionCode + versionName
-#    iOS: Xcode → General → Build + Version
-
-# 3. Tag and push
-git push && git push --tags
-```
-
-### Version sync script
-
-Add to `package.json` scripts:
-
-```json
-"version:sync": "node -e \"const v = require('./package.json').version; require('fs').writeFileSync('android/app/build.gradle', require('fs').readFileSync('android/app/build.gradle','utf8').replace(/versionName \\\"[^\\\"]+\\\"/, 'versionName \\\"'+v+'\\\"'))\""
+npm version patch --no-git-tag-version   # 1.0.0 → 1.0.1 in package.json
+# Android: android/app/build.gradle → versionCode + versionName
+# iOS:     ios/App/App.xcodeproj/project.pbxproj → MARKETING_VERSION + CURRENT_PROJECT_VERSION
 ```
 
 ---
 
 ## Manual Pipeline Dispatch
 
-Both publish workflows support `workflow_dispatch` — trigger from the GitHub UI:
+Every workflow can be triggered from the GitHub UI (**Actions → select workflow
+→ Run workflow**):
 
-1. Go to your repo → **Actions**
-2. Select **Publish Android** or **Publish iOS**
-3. Click **Run workflow**
-4. Choose the track/destination and run
+- **Release** — the normal path; enter a version and pick the store(s).
+- **Publish Android / Publish iOS** — run a single platform without bumping the
+  version (e.g. to re-publish a build, or with `dry_run` to rehearse).
 
 ---
 

@@ -1,9 +1,9 @@
 name: Publish Android — Google Play
 
+# Triggered manually, or called by the Release workflow (release.yml).
+# Tag pushes do NOT publish directly — use the Release workflow so versions are
+# bumped and tagged in one place (prevents double publishing).
 on:
-  push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
   workflow_dispatch:
     inputs:
       track:
@@ -12,6 +12,26 @@ on:
         default: "internal"
         type: choice
         options: [internal, alpha, beta, production]
+      dry_run:
+        description: "Build & sign the AAB but do NOT upload to Google Play"
+        required: false
+        default: false
+        type: boolean
+  workflow_call:
+    inputs:
+      track:
+        required: false
+        default: "internal"
+        type: string
+      dry_run:
+        required: false
+        default: false
+        type: boolean
+      ref:
+        description: "Git ref (tag/branch/sha) to build"
+        required: false
+        default: ""
+        type: string
 
 # ── Required GitHub Secrets ─────────────────────────────────────────────────
 # KEYSTORE_BASE64          base64-encoded .jks release keystore
@@ -23,11 +43,13 @@ on:
 
 jobs:
   publish-android:
-    name: Build & publish AAB → Play Store (${{ github.event.inputs.track || 'internal' }})
+    name: Build & publish AAB → Play Store (${{ inputs.track || 'internal' }})
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - uses: actions/setup-node@v4
         with:
@@ -66,24 +88,21 @@ jobs:
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: android-release-aab-${{ github.ref_name }}
+          name: android-release-aab-${{ github.run_id }}
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 30
 
       - name: Upload to Google Play
+        if: ${{ !inputs.dry_run }}
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
           packageName:   com.juhisohal.jsplayer
           releaseFiles:  android/app/build/outputs/bundle/release/app-release.aab
-          track:         ${{ github.event.inputs.track || 'internal' }}
+          track:         ${{ inputs.track || 'internal' }}
           status:        completed
           whatsNewDirectory: android/fastlane/metadata/android/en-US/changelogs
 
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: android/app/build/outputs/bundle/release/app-release.aab
-          generate_release_notes: true
-          draft: false
+      - name: Dry run — skipped Google Play upload
+        if: ${{ inputs.dry_run }}
+        run: echo "dry_run=true → signed AAB built and uploaded as an artifact, but NOT published to Google Play."
