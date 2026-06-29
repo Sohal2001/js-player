@@ -227,14 +227,14 @@ describe('Accessibility', () => {
 
 describe('Visual / responsive', () => {
   it('phone frame is centred on desktop viewport', async () => {
-    const box = await page.boundingBox('.phone-frame');
+    const box = await page.locator('.phone-frame').boundingBox();
     expect(box.x).toBeGreaterThan(200); // not flush to left edge
     expect(box.width).toBeLessThanOrEqual(420); // max ~390px + border
   });
 
   it('bottom nav is positioned at the bottom of the phone frame', async () => {
-    const navBox = await page.boundingBox('.bottom-nav');
-    const frameBox = await page.boundingBox('.phone-frame');
+    const navBox = await page.locator('.bottom-nav').boundingBox();
+    const frameBox = await page.locator('.phone-frame').boundingBox();
     const navBottom = navBox.y + navBox.height;
     const frameBottom = frameBox.y + frameBox.height;
     expect(Math.abs(navBottom - frameBottom)).toBeLessThan(10);

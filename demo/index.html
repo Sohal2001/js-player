@@ -37,7 +37,8 @@
     <link rel="apple-touch-icon" href="../public/icons/icon-192.png" />
     <link rel="manifest" href="../public/manifest.json" />
 
-    <link rel="stylesheet" href="../src/styles/player.css" />
+    <!-- player.css is imported via the module script below so Vite bundles it
+         (the file lives outside this demo/ root, so a plain <link> 404s). -->
     <style>
       /* ── Reset & base ───────────────────────────────────────────────────── */
       *,
@@ -633,6 +634,7 @@
     <!-- /phone-frame -->
 
     <script type="module">
+      import '../src/styles/player.css';
       import { createPlayer } from '../src/index.js';
 
       // ── Bootstrap local player ───────────────────────────────────────────────
