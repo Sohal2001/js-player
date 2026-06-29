@@ -88,7 +88,7 @@ export class YouTubePlayer extends Player {
       playerVars: {
         autoplay,
         controls,
-        rel: 0,         // No unrelated video suggestions
+        rel: 0, // No unrelated video suggestions
         modestbranding: 1,
         origin: window.location.origin,
       },

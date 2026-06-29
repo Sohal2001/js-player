@@ -51,9 +51,10 @@ Push to feature branch
 
 | File | Trigger | Purpose |
 |------|---------|---------|
-| `.github/workflows/ci.yml` | push / PR | Tests, lint, build, E2E |
+| `.github/workflows/ci.yml` | push / PR | Tests (unit + integration + functional), lint, format, build, E2E |
 | `.github/workflows/publish-android.yml` | version tag / manual | Build AAB → Google Play |
 | `.github/workflows/publish-ios.yml` | version tag / manual | Build IPA → App Store Connect |
+| `.github/dependabot.yml` | schedule | Weekly npm + GitHub Actions updates, monthly Gradle |
 
 ---
 
@@ -63,7 +64,8 @@ Push to feature branch
 
 #### `unit-tests`
 
-Runs the full Vitest suite across Node 18, 20, and 22.
+Runs the full jsdom Vitest suite — **unit + integration + functional** tests
+(`npm test`) across Node 18, 20, and 22.
 
 ```yaml
 strategy:
@@ -88,7 +90,12 @@ Fails CI if thresholds aren't met.
 
 #### `lint`
 
-Runs `npm run lint` (ESLint). Non-fatal until eslint config is finalised — change `|| true` to remove the bypass.
+Runs two gates and **fails CI** if either does not pass:
+
+- `npm run lint` — ESLint (`eslint:recommended` + project rules; config in `.eslintrc.json`)
+- `npm run format:check` — Prettier formatting check (config in `.prettierrc.json`)
+
+Fix locally with `npm run lint:fix` and `npm run format`.
 
 #### `build`
 
@@ -100,7 +107,14 @@ Uploads `dist-app/` as an artifact.
 
 #### `e2e`
 
-Depends on `build`. Starts the dev server, waits for it (`wait-on`), then runs Playwright. Uploads results on failure.
+Depends on `build`. Installs the matching Chromium (`npx playwright install
+chromium --with-deps`), starts the dev server on port **5177**, waits for it
+(`wait-on`), then runs Playwright. Uploads results on failure.
+
+> The dev server port is pinned to `5177` (`strictPort`) in `vite.config.js`, so
+> the value used by `wait-on` and the E2E suite always matches. To point the
+> suite at a pre-installed browser instead of the Playwright-managed one, set
+> `E2E_CHROMIUM_PATH` (and optionally `E2E_BASE_URL`).
 
 ### Concurrency
 

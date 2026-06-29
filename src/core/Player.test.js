@@ -3,24 +3,51 @@ import { Player } from './Player.js';
 
 // Concrete subclass that exposes protected internals for testing
 class TestPlayer extends Player {
-  load(src)       { this._setState('loading'); this._src = src; }
-  play()          { this._setState('playing'); }
-  pause()         { this._setState('paused'); }
-  seek(s)         { this._seeked = s; }
-  get currentTime() { return this._ct ?? 0; }
-  get duration()    { return this._dur ?? 0; }
-  get volume()      { return this._vol ?? 1; }
-  set volume(v)     { this._vol = v; }
-  get muted()       { return this._muted ?? false; }
-  set muted(m)      { this._muted = m; }
-  get playbackRate() { return this._rate ?? 1; }
-  set playbackRate(r){ this._rate = r; }
+  load(src) {
+    this._setState('loading');
+    this._src = src;
+  }
+  play() {
+    this._setState('playing');
+  }
+  pause() {
+    this._setState('paused');
+  }
+  seek(s) {
+    this._seeked = s;
+  }
+  get currentTime() {
+    return this._ct ?? 0;
+  }
+  get duration() {
+    return this._dur ?? 0;
+  }
+  get volume() {
+    return this._vol ?? 1;
+  }
+  set volume(v) {
+    this._vol = v;
+  }
+  get muted() {
+    return this._muted ?? false;
+  }
+  set muted(m) {
+    this._muted = m;
+  }
+  get playbackRate() {
+    return this._rate ?? 1;
+  }
+  set playbackRate(r) {
+    this._rate = r;
+  }
 }
 
 describe('Player (base class)', () => {
   let player;
 
-  beforeEach(() => { player = new TestPlayer(); });
+  beforeEach(() => {
+    player = new TestPlayer();
+  });
 
   it('starts in idle state', () => {
     expect(player.state).toBe('idle');
@@ -55,7 +82,7 @@ describe('Player (base class)', () => {
     const fn = vi.fn();
     player.on('statechange', fn);
     player.destroy();
-    player._setState('playing');   // would fire if listener still attached
+    player._setState('playing'); // would fire if listener still attached
     expect(fn).not.toHaveBeenCalled();
   });
 

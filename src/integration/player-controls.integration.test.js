@@ -16,7 +16,9 @@ function makeVideoEl() {
 
   Object.defineProperty(el, 'duration', {
     get: () => _duration,
-    set: (v) => { _duration = v; },
+    set: (v) => {
+      _duration = v;
+    },
     configurable: true,
   });
 
@@ -27,8 +29,8 @@ describe('LocalPlayer + Controls integration', () => {
   let video, player, controls;
 
   beforeEach(() => {
-    video    = makeVideoEl();
-    player   = new LocalPlayer(video);
+    video = makeVideoEl();
+    player = new LocalPlayer(video);
     controls = new Controls(player);
   });
 
@@ -39,13 +41,17 @@ describe('LocalPlayer + Controls integration', () => {
 
   it('native "play" event propagates to controls button label', () => {
     video.dispatchEvent(new Event('play'));
-    expect(controls.element.querySelector('.jsp-btn--play').textContent).toBe('⏸');
+    expect(controls.element.querySelector('.jsp-btn--play').textContent).toBe(
+      '⏸',
+    );
   });
 
   it('native "pause" event propagates to controls button label', () => {
     video.dispatchEvent(new Event('play'));
     video.dispatchEvent(new Event('pause'));
-    expect(controls.element.querySelector('.jsp-btn--play').textContent).toBe('▶');
+    expect(controls.element.querySelector('.jsp-btn--play').textContent).toBe(
+      '▶',
+    );
   });
 
   it('native timeupdate event updates progress bar fill', () => {
@@ -60,7 +66,9 @@ describe('LocalPlayer + Controls integration', () => {
     video.currentTime = 90;
     video.duration = 180;
     video.dispatchEvent(new Event('timeupdate'));
-    expect(controls.element.querySelector('.jsp-time').textContent).toBe('1:30 / 3:00');
+    expect(controls.element.querySelector('.jsp-time').textContent).toBe(
+      '1:30 / 3:00',
+    );
   });
 
   it('volume slider change propagates to video element volume', () => {
@@ -100,9 +108,11 @@ describe('LocalPlayer + Controls integration', () => {
     video.currentTime = 50;
     // Sync the progress bar to 50% before pressing ArrowRight
     video.dispatchEvent(new Event('timeupdate'));
-    controls.element.querySelector('.jsp-progress').dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })
-    );
+    controls.element
+      .querySelector('.jsp-progress')
+      .dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }),
+      );
     expect(video.currentTime).toBeGreaterThan(50);
   });
 

@@ -25,9 +25,13 @@ npm run build      # Outputs dist/js-player.es.js and dist/js-player.umd.js
 ## Test
 
 ```bash
-npm test           # Run unit tests (Vitest)
-npm run test:coverage
+npm test            # Unit + integration + functional tests (Vitest / jsdom)
+npm run test:coverage   # …with coverage + threshold gate
+npm run test:e2e    # End-to-end tests (Playwright / Chromium, needs `npm run dev`)
 ```
+
+Four test layers — unit, integration, functional, and E2E — are documented in
+[docs/TESTING.md](docs/TESTING.md).
 
 ---
 
@@ -90,12 +94,33 @@ js-player/
 │   │   └── formatTime.js     Seconds → MM:SS / HH:MM:SS
 │   ├── styles/
 │   │   └── player.css        Dark theme, mobile-optimised
-│   └── index.js              Public API + createPlayer() factory
+│   ├── index.js              Public API + createPlayer() factory
+│   ├── integration/          Integration tests (player + controls)
+│   ├── functional/           Functional tests (public createPlayer API)
+│   └── e2e/                  End-to-end tests (Playwright)
 ├── demo/
 │   └── index.html            Mobile phone-frame demo
+├── public/                   PWA manifest, service worker, icons
+├── android/  ios/            Capacitor native projects
+├── docs/                     Architecture, integration, testing, pipeline guides
+├── .github/                  CI + publish workflows, Dependabot
 ├── vite.config.js
 └── package.json
 ```
+
+---
+
+## Documentation
+
+Full docs live in [`docs/`](docs/README.md):
+
+| Guide | What's inside |
+|-------|---------------|
+| [Architecture](docs/ARCHITECTURE.md) | How the app works — modules, event flow, library/PWA/native layers |
+| [Development](docs/DEVELOPMENT.md) | Local setup, commands, code style, contribution workflow |
+| [Integration](docs/INTEGRATION.md) | Embedding the player — API, events, styling, framework examples |
+| [Testing](docs/TESTING.md) | Unit / integration / functional / E2E layers and how to extend them |
+| [Pipeline](docs/PIPELINE.md) | CI/CD workflows, secrets, versioning, releases |
 
 ---
 

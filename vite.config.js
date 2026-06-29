@@ -4,6 +4,15 @@ import { resolve } from 'path';
 export default defineConfig({
   root: 'demo',
   publicDir: '../public',
+  // Dev/preview server — the E2E suite and CI both expect the app on port 5177.
+  server: {
+    port: 5177,
+    strictPort: true,
+  },
+  preview: {
+    port: 5177,
+    strictPort: true,
+  },
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.js'),

@@ -57,23 +57,35 @@ export class ProgressBar {
       this.#seek(getFraction(e.clientX));
     });
 
-    this.#root.addEventListener('touchstart', (e) => {
-      this.#isDragging = true;
-      this.#seek(getFraction(e.touches[0].clientX));
-    }, { passive: true });
+    this.#root.addEventListener(
+      'touchstart',
+      (e) => {
+        this.#isDragging = true;
+        this.#seek(getFraction(e.touches[0].clientX));
+      },
+      { passive: true },
+    );
 
     document.addEventListener('mousemove', (e) => {
       if (!this.#isDragging) return;
       this.#seek(getFraction(e.clientX));
     });
 
-    document.addEventListener('touchmove', (e) => {
-      if (!this.#isDragging) return;
-      this.#seek(getFraction(e.touches[0].clientX));
-    }, { passive: true });
+    document.addEventListener(
+      'touchmove',
+      (e) => {
+        if (!this.#isDragging) return;
+        this.#seek(getFraction(e.touches[0].clientX));
+      },
+      { passive: true },
+    );
 
-    document.addEventListener('mouseup', () => { this.#isDragging = false; });
-    document.addEventListener('touchend', () => { this.#isDragging = false; });
+    document.addEventListener('mouseup', () => {
+      this.#isDragging = false;
+    });
+    document.addEventListener('touchend', () => {
+      this.#isDragging = false;
+    });
 
     // Keyboard: left/right arrow ±5%
     this.#root.addEventListener('keydown', (e) => {
@@ -105,7 +117,10 @@ export class ProgressBar {
     const pct = `${fraction * 100}%`;
     this.#fill.style.width = pct;
     this.#thumb.style.left = pct;
-    this.#root.setAttribute('aria-valuenow', String(Math.round(fraction * 100)));
+    this.#root.setAttribute(
+      'aria-valuenow',
+      String(Math.round(fraction * 100)),
+    );
   }
 
   /** @returns {HTMLElement} */

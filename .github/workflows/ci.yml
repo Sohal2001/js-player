@@ -11,9 +11,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ── Unit + Integration Tests ──────────────────────────────────────────────
+  # ── Unit + Integration + Functional Tests ─────────────────────────────────
   unit-tests:
-    name: Unit & Integration Tests (Node ${{ matrix.node }})
+    name: Unit, Integration & Functional Tests (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run unit + integration tests
+      - name: Run unit + integration + functional tests
         run: npm test
 
       - name: Upload coverage report
@@ -60,9 +60,9 @@ jobs:
       - name: Run coverage (enforces thresholds)
         run: npm run test:coverage
 
-  # ── Lint ──────────────────────────────────────────────────────────────────
+  # ── Lint & Format ───────────────────────────────────────────────────────
   lint:
-    name: Lint
+    name: Lint & Format
     runs-on: ubuntu-latest
 
     steps:
@@ -76,7 +76,10 @@ jobs:
       - run: npm ci
 
       - name: ESLint
-        run: npm run lint || true   # non-fatal until eslint config is finalised
+        run: npm run lint
+
+      - name: Prettier format check
+        run: npm run format:check
 
   # ── Build ─────────────────────────────────────────────────────────────────
   build:

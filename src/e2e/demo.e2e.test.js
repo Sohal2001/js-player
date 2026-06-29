@@ -10,20 +10,26 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { chromium } from 'playwright';
 
-const BASE_URL = 'http://localhost:5177';
-const CHROMIUM  = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:5177';
+
+// Prefer an explicit override, then Playwright's own resolution (set when
+// `npx playwright install` was used, as in CI). Falling back to `undefined`
+// lets Playwright locate its managed Chromium automatically.
+const CHROMIUM = process.env.E2E_CHROMIUM_PATH || undefined;
 
 let browser;
 let page;
 
 beforeAll(async () => {
   browser = await chromium.launch({
-    executablePath: CHROMIUM,
+    ...(CHROMIUM ? { executablePath: CHROMIUM } : {}),
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 });
 
-afterAll(async () => { await browser?.close(); });
+afterAll(async () => {
+  await browser?.close();
+});
 
 beforeEach(async () => {
   page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -104,7 +110,9 @@ describe('Player controls', () => {
   });
 
   it('speed selector contains 1.5× option', async () => {
-    const options = await page.$$eval('.jsp-speed option', (opts) => opts.map((o) => o.value));
+    const options = await page.$$eval('.jsp-speed option', (opts) =>
+      opts.map((o) => o.value),
+    );
     expect(options).toContain('1.5');
   });
 
@@ -144,7 +152,9 @@ describe('Tab switching', () => {
 
 describe('Video queue items', () => {
   it('each queue item has a title', async () => {
-    const titles = await page.$$eval('.video-item__title', (els) => els.map((e) => e.textContent.trim()));
+    const titles = await page.$$eval('.video-item__title', (els) =>
+      els.map((e) => e.textContent.trim()),
+    );
     expect(titles.length).toBe(4);
     titles.forEach((t) => expect(t.length).toBeGreaterThan(0));
   });
@@ -205,7 +215,10 @@ describe('Accessibility', () => {
   });
 
   it('search icon button has aria-label', async () => {
-    const label = await page.getAttribute('.icon-btn[aria-label="Search"]', 'aria-label');
+    const label = await page.getAttribute(
+      '.icon-btn[aria-label="Search"]',
+      'aria-label',
+    );
     expect(label).toBe('Search');
   });
 });
@@ -215,14 +228,14 @@ describe('Accessibility', () => {
 describe('Visual / responsive', () => {
   it('phone frame is centred on desktop viewport', async () => {
     const box = await page.boundingBox('.phone-frame');
-    expect(box.x).toBeGreaterThan(200);           // not flush to left edge
-    expect(box.width).toBeLessThanOrEqual(420);   // max ~390px + border
+    expect(box.x).toBeGreaterThan(200); // not flush to left edge
+    expect(box.width).toBeLessThanOrEqual(420); // max ~390px + border
   });
 
   it('bottom nav is positioned at the bottom of the phone frame', async () => {
-    const navBox   = await page.boundingBox('.bottom-nav');
+    const navBox = await page.boundingBox('.bottom-nav');
     const frameBox = await page.boundingBox('.phone-frame');
-    const navBottom   = navBox.y + navBox.height;
+    const navBottom = navBox.y + navBox.height;
     const frameBottom = frameBox.y + frameBox.height;
     expect(Math.abs(navBottom - frameBottom)).toBeLessThan(10);
   });

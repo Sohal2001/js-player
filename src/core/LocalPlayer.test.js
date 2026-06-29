@@ -30,7 +30,7 @@ describe('LocalPlayer', () => {
   let player;
 
   beforeEach(() => {
-    video  = makeVideoEl({ duration: 100 });
+    video = makeVideoEl({ duration: 100 });
     player = new LocalPlayer(video);
   });
 
@@ -42,14 +42,18 @@ describe('LocalPlayer', () => {
   });
 
   it('accepts a real HTMLVideoElement without throwing', () => {
-    expect(() => new LocalPlayer(document.createElement('video'))).not.toThrow();
+    expect(
+      () => new LocalPlayer(document.createElement('video')),
+    ).not.toThrow();
   });
 
   it('registers native video events on construction', () => {
     // Verified implicitly: events fire and are handled below.
     // Check addEventListener was called for key events.
     const spy = vi.spyOn(document.createElement('video'), 'addEventListener');
-    new LocalPlayer(spy.mock?.instances?.[0] ?? document.createElement('video'));
+    new LocalPlayer(
+      spy.mock?.instances?.[0] ?? document.createElement('video'),
+    );
     // Instead just confirm the player is operational (event-bound):
     const fn = vi.fn();
     player.on('play', fn);

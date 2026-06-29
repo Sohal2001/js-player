@@ -12,9 +12,17 @@ class StubPlayer extends EventEmitter {
   duration = 120;
   currentTime = 0;
 
-  play  = vi.fn(() => { this.paused = false; this.emit('play'); });
-  pause = vi.fn(() => { this.paused = true;  this.emit('pause'); });
-  seek  = vi.fn((s) => { this.currentTime = s; });
+  play = vi.fn(() => {
+    this.paused = false;
+    this.emit('play');
+  });
+  pause = vi.fn(() => {
+    this.paused = true;
+    this.emit('pause');
+  });
+  seek = vi.fn((s) => {
+    this.currentTime = s;
+  });
 }
 
 describe('Controls', () => {
@@ -22,7 +30,7 @@ describe('Controls', () => {
   let controls;
 
   beforeEach(() => {
-    player   = new StubPlayer();
+    player = new StubPlayer();
     controls = new Controls(player);
   });
 

@@ -1,0 +1,39 @@
+{
+  "root": true,
+  "env": {
+    "browser": true,
+    "es2022": true,
+    "node": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module"
+  },
+  "extends": ["eslint:recommended"],
+  "rules": {
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-console": "off",
+    "prefer-const": "warn",
+    "eqeqeq": ["warn", "smart"]
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.js", "src/e2e/**", "src/functional/**", "src/integration/**"],
+      "env": { "node": true, "browser": true },
+      "globals": {
+        "describe": "readonly",
+        "it": "readonly",
+        "expect": "readonly",
+        "vi": "readonly",
+        "beforeAll": "readonly",
+        "afterAll": "readonly",
+        "beforeEach": "readonly",
+        "afterEach": "readonly"
+      }
+    },
+    {
+      "files": ["src/core/YouTubePlayer.js"],
+      "globals": { "YT": "readonly" }
+    }
+  ]
+}

@@ -12,7 +12,8 @@ describe('EventEmitter', () => {
 
   it('supports multiple listeners for same event', () => {
     const ee = new EventEmitter();
-    const a = vi.fn(), b = vi.fn();
+    const a = vi.fn(),
+      b = vi.fn();
     ee.on('x', a).on('x', b);
     ee.emit('x');
     expect(a).toHaveBeenCalledOnce();

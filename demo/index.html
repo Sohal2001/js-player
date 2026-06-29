@@ -1,634 +1,736 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>JS Player — Juhi Sohal Player</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>JS Player — Juhi Sohal Player</title>
 
-  <!-- PWA / Mobile meta -->
-  <meta name="description" content="Lightweight video player for local files and YouTube" />
-  <meta name="theme-color" content="#0f0f0f" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="JS Player" />
-  <meta name="application-name" content="JS Player" />
-  <meta name="msapplication-TileColor" content="#0f0f0f" />
+    <!-- PWA / Mobile meta -->
+    <meta
+      name="description"
+      content="Lightweight video player for local files and YouTube"
+    />
+    <meta name="theme-color" content="#0f0f0f" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="JS Player" />
+    <meta name="application-name" content="JS Player" />
+    <meta name="msapplication-TileColor" content="#0f0f0f" />
 
-  <!-- Open Graph -->
-  <meta property="og:title" content="JS Player — Juhi Sohal Player" />
-  <meta property="og:description" content="Lightweight video player for local files and YouTube" />
-  <meta property="og:type" content="website" />
+    <!-- Open Graph -->
+    <meta property="og:title" content="JS Player — Juhi Sohal Player" />
+    <meta
+      property="og:description"
+      content="Lightweight video player for local files and YouTube"
+    />
+    <meta property="og:type" content="website" />
 
-  <!-- Icons -->
-  <link rel="icon" type="image/svg+xml" href="../public/icons/icon.svg" />
-  <link rel="apple-touch-icon" href="../public/icons/icon-192.png" />
-  <link rel="manifest" href="../public/manifest.json" />
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="../public/icons/icon.svg" />
+    <link rel="apple-touch-icon" href="../public/icons/icon-192.png" />
+    <link rel="manifest" href="../public/manifest.json" />
 
-  <link rel="stylesheet" href="../src/styles/player.css" />
-  <style>
-    /* ── Reset & base ───────────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    <link rel="stylesheet" href="../src/styles/player.css" />
+    <style>
+      /* ── Reset & base ───────────────────────────────────────────────────── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    body {
-      background: #121212;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      min-height: 100dvh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
+      body {
+        background: #121212;
+        color: #fff;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
 
-    /* ── Phone frame ────────────────────────────────────────────────────── */
-    .phone-frame {
-      width: 390px;
-      min-height: 844px;
-      background: #0f0f0f;
-      border-radius: 50px;
-      border: 8px solid #2a2a2a;
-      box-shadow:
-        0 0 0 2px #111,
-        0 0 0 3px #3a3a3a,
-        0 40px 80px rgba(0,0,0,0.8);
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
+      /* ── Phone frame ────────────────────────────────────────────────────── */
+      .phone-frame {
+        width: 390px;
+        min-height: 844px;
+        background: #0f0f0f;
+        border-radius: 50px;
+        border: 8px solid #2a2a2a;
+        box-shadow:
+          0 0 0 2px #111,
+          0 0 0 3px #3a3a3a,
+          0 40px 80px rgba(0, 0, 0, 0.8);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
 
-    /* Notch */
-    .phone-frame::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 126px;
-      height: 34px;
-      background: #0f0f0f;
-      border-radius: 0 0 20px 20px;
-      z-index: 10;
-    }
+      /* Notch */
+      .phone-frame::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 126px;
+        height: 34px;
+        background: #0f0f0f;
+        border-radius: 0 0 20px 20px;
+        z-index: 10;
+      }
 
-    /* ── Status bar ─────────────────────────────────────────────────────── */
-    .status-bar {
-      height: 50px;
-      padding: 14px 28px 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-      font-weight: 600;
-      color: #fff;
-      flex-shrink: 0;
-    }
+      /* ── Status bar ─────────────────────────────────────────────────────── */
+      .status-bar {
+        height: 50px;
+        padding: 14px 28px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+        flex-shrink: 0;
+      }
 
-    .status-bar__time { letter-spacing: 0.02em; }
-    .status-bar__icons { display: flex; gap: 6px; align-items: center; }
+      .status-bar__time {
+        letter-spacing: 0.02em;
+      }
+      .status-bar__icons {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
 
-    /* ── App header ─────────────────────────────────────────────────────── */
-    .app-header {
-      padding: 4px 20px 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
-    }
+      /* ── App header ─────────────────────────────────────────────────────── */
+      .app-header {
+        padding: 4px 20px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
 
-    .app-logo {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #e53935, #ff5252);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      flex-shrink: 0;
-    }
+      .app-logo {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #e53935, #ff5252);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+      }
 
-    .app-name {
-      font-size: 20px;
-      font-weight: 700;
-      background: linear-gradient(90deg, #e53935, #ff8a65);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
+      .app-name {
+        font-size: 20px;
+        font-weight: 700;
+        background: linear-gradient(90deg, #e53935, #ff8a65);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
 
-    .app-header__spacer { flex: 1; }
+      .app-header__spacer {
+        flex: 1;
+      }
 
-    .icon-btn {
-      background: rgba(255,255,255,0.06);
-      border: none;
-      color: #fff;
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      cursor: pointer;
-    }
+      .icon-btn {
+        background: rgba(255, 255, 255, 0.06);
+        border: none;
+        color: #fff;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        cursor: pointer;
+      }
 
-    /* ── Scrollable content ─────────────────────────────────────────────── */
-    .app-content {
-      flex: 1;
-      overflow-y: auto;
-      padding-bottom: 80px;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-    .app-content::-webkit-scrollbar { display: none; }
+      /* ── Scrollable content ─────────────────────────────────────────────── */
+      .app-content {
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 80px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .app-content::-webkit-scrollbar {
+        display: none;
+      }
 
-    /* ── Section header ─────────────────────────────────────────────────── */
-    .section-header {
-      padding: 16px 20px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+      /* ── Section header ─────────────────────────────────────────────────── */
+      .section-header {
+        padding: 16px 20px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
 
-    .section-title {
-      font-size: 16px;
-      font-weight: 700;
-    }
+      .section-title {
+        font-size: 16px;
+        font-weight: 700;
+      }
 
-    .section-link {
-      font-size: 13px;
-      color: #e53935;
-      text-decoration: none;
-      cursor: pointer;
-    }
+      .section-link {
+        font-size: 13px;
+        color: #e53935;
+        text-decoration: none;
+        cursor: pointer;
+      }
 
-    /* ── Player card ────────────────────────────────────────────────────── */
-    .player-card {
-      margin: 0 16px 20px;
-      border-radius: 16px;
-      overflow: hidden;
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-    }
+      /* ── Player card ────────────────────────────────────────────────────── */
+      .player-card {
+        margin: 0 16px 20px;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #1a1a1a;
+        border: 1px solid #2a2a2a;
+      }
 
-    .player-card .jsp-player {
-      border-radius: 0;
-      box-shadow: none;
-    }
+      .player-card .jsp-player {
+        border-radius: 0;
+        box-shadow: none;
+      }
 
-    .player-info {
-      padding: 12px 14px;
-      border-top: 1px solid #2a2a2a;
-    }
+      .player-info {
+        padding: 12px 14px;
+        border-top: 1px solid #2a2a2a;
+      }
 
-    .player-info__title {
-      font-size: 14px;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+      .player-info__title {
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
-    .player-info__meta {
-      font-size: 12px;
-      color: #888;
-      margin-top: 3px;
-    }
+      .player-info__meta {
+        font-size: 12px;
+        color: #888;
+        margin-top: 3px;
+      }
 
-    /* ── Source tabs ────────────────────────────────────────────────────── */
-    .source-tabs {
-      display: flex;
-      gap: 8px;
-      padding: 0 16px 14px;
-    }
+      /* ── Source tabs ────────────────────────────────────────────────────── */
+      .source-tabs {
+        display: flex;
+        gap: 8px;
+        padding: 0 16px 14px;
+      }
 
-    .source-tab {
-      flex: 1;
-      padding: 9px;
-      border-radius: 10px;
-      border: 1.5px solid #2a2a2a;
-      background: transparent;
-      color: #888;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.15s;
-    }
+      .source-tab {
+        flex: 1;
+        padding: 9px;
+        border-radius: 10px;
+        border: 1.5px solid #2a2a2a;
+        background: transparent;
+        color: #888;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.15s;
+      }
 
-    .source-tab.active {
-      border-color: #e53935;
-      color: #e53935;
-      background: rgba(229,57,53,0.08);
-    }
+      .source-tab.active {
+        border-color: #e53935;
+        color: #e53935;
+        background: rgba(229, 57, 53, 0.08);
+      }
 
-    /* ── Video URL input ────────────────────────────────────────────────── */
-    .input-row {
-      display: flex;
-      gap: 8px;
-      padding: 0 16px 16px;
-    }
+      /* ── Video URL input ────────────────────────────────────────────────── */
+      .input-row {
+        display: flex;
+        gap: 8px;
+        padding: 0 16px 16px;
+      }
 
-    .url-input {
-      flex: 1;
-      background: #1a1a1a;
-      border: 1.5px solid #2a2a2a;
-      border-radius: 10px;
-      color: #fff;
-      font-size: 13px;
-      padding: 10px 12px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
+      .url-input {
+        flex: 1;
+        background: #1a1a1a;
+        border: 1.5px solid #2a2a2a;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 13px;
+        padding: 10px 12px;
+        outline: none;
+        transition: border-color 0.15s;
+      }
 
-    .url-input::placeholder { color: #555; }
-    .url-input:focus { border-color: #e53935; }
+      .url-input::placeholder {
+        color: #555;
+      }
+      .url-input:focus {
+        border-color: #e53935;
+      }
 
-    .load-btn {
-      background: #e53935;
-      border: none;
-      border-radius: 10px;
-      color: #fff;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 10px 16px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.15s;
-    }
+      .load-btn {
+        background: #e53935;
+        border: none;
+        border-radius: 10px;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 10px 16px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.15s;
+      }
 
-    .load-btn:active { background: #c62828; }
+      .load-btn:active {
+        background: #c62828;
+      }
 
-    /* ── Video list ─────────────────────────────────────────────────────── */
-    .video-list {
-      padding: 0 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+      /* ── Video list ─────────────────────────────────────────────────────── */
+      .video-list {
+        padding: 0 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
 
-    .video-item {
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 12px;
-      transition: background 0.12s;
-    }
+      .video-item {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 12px;
+        transition: background 0.12s;
+      }
 
-    .video-item:active { background: rgba(255,255,255,0.06); }
+      .video-item:active {
+        background: rgba(255, 255, 255, 0.06);
+      }
 
-    .video-item__thumb {
-      width: 100px;
-      height: 62px;
-      background: #1e1e1e;
-      border-radius: 8px;
-      flex-shrink: 0;
-      position: relative;
-      overflow: hidden;
-    }
+      .video-item__thumb {
+        width: 100px;
+        height: 62px;
+        background: #1e1e1e;
+        border-radius: 8px;
+        flex-shrink: 0;
+        position: relative;
+        overflow: hidden;
+      }
 
-    .video-item__thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+      .video-item__thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
 
-    .video-item__thumb-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
-    }
+      .video-item__thumb-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+      }
 
-    .video-item__duration {
-      position: absolute;
-      bottom: 4px;
-      right: 4px;
-      background: rgba(0,0,0,0.8);
-      border-radius: 4px;
-      font-size: 10px;
-      padding: 1px 4px;
-      color: #fff;
-    }
+      .video-item__duration {
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: 4px;
+        font-size: 10px;
+        padding: 1px 4px;
+        color: #fff;
+      }
 
-    .video-item__info { flex: 1; min-width: 0; }
+      .video-item__info {
+        flex: 1;
+        min-width: 0;
+      }
 
-    .video-item__title {
-      font-size: 13px;
-      font-weight: 600;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      line-height: 1.4;
-    }
+      .video-item__title {
+        font-size: 13px;
+        font-weight: 600;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.4;
+      }
 
-    .video-item__meta {
-      font-size: 11px;
-      color: #666;
-      margin-top: 4px;
-    }
+      .video-item__meta {
+        font-size: 11px;
+        color: #666;
+        margin-top: 4px;
+      }
 
-    /* ── Bottom navigation ──────────────────────────────────────────────── */
-    .bottom-nav {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(15,15,15,0.92);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-top: 1px solid #1f1f1f;
-      display: flex;
-      padding-bottom: env(safe-area-inset-bottom, 8px);
-    }
+      /* ── Bottom navigation ──────────────────────────────────────────────── */
+      .bottom-nav {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(15, 15, 15, 0.92);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-top: 1px solid #1f1f1f;
+        display: flex;
+        padding-bottom: env(safe-area-inset-bottom, 8px);
+      }
 
-    .nav-item {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 0 8px;
-      gap: 3px;
-      cursor: pointer;
-      border: none;
-      background: none;
-      color: #555;
-      font-size: 10px;
-      font-weight: 500;
-      transition: color 0.15s;
-    }
+      .nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 0 8px;
+        gap: 3px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        color: #555;
+        font-size: 10px;
+        font-weight: 500;
+        transition: color 0.15s;
+      }
 
-    .nav-item.active { color: #e53935; }
-    .nav-item__icon { font-size: 20px; }
+      .nav-item.active {
+        color: #e53935;
+      }
+      .nav-item__icon {
+        font-size: 20px;
+      }
 
-    /* ── YouTube badge ──────────────────────────────────────────────────── */
-    .yt-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      background: rgba(255,0,0,0.12);
-      border: 1px solid rgba(255,0,0,0.25);
-      border-radius: 6px;
-      padding: 3px 8px;
-      font-size: 11px;
-      color: #ff5252;
-      font-weight: 600;
-    }
+      /* ── YouTube badge ──────────────────────────────────────────────────── */
+      .yt-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(255, 0, 0, 0.12);
+        border: 1px solid rgba(255, 0, 0, 0.25);
+        border-radius: 6px;
+        padding: 3px 8px;
+        font-size: 11px;
+        color: #ff5252;
+        font-weight: 600;
+      }
 
-    /* ── Scrolling marquee for long titles ──────────────────────────────── */
-    @keyframes marquee {
-      0%   { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-  </style>
-</head>
-<body>
-
-<div class="phone-frame">
-
-  <!-- Status Bar -->
-  <div class="status-bar">
-    <span class="status-bar__time" id="statusTime">9:41</span>
-    <div class="status-bar__icons">
-      <span>●●●</span>
-      <span>WiFi</span>
-      <span>🔋</span>
-    </div>
-  </div>
-
-  <!-- App Header -->
-  <div class="app-header">
-    <div class="app-logo">▶</div>
-    <span class="app-name">JS Player</span>
-    <div class="app-header__spacer"></div>
-    <button class="icon-btn" aria-label="Search">🔍</button>
-    <button class="icon-btn" aria-label="More">⋯</button>
-  </div>
-
-  <!-- Scrollable Content -->
-  <div class="app-content">
-
-    <!-- Source Tabs -->
-    <div class="source-tabs">
-      <button class="source-tab active" id="tabLocal" onclick="switchTab('local')">📁 Local</button>
-      <button class="source-tab" id="tabYoutube" onclick="switchTab('youtube')">▶ YouTube</button>
-    </div>
-
-    <!-- URL Input -->
-    <div class="input-row" id="localInputRow">
-      <input
-        class="url-input"
-        id="videoUrl"
-        type="url"
-        placeholder="Paste a .mp4 / .webm URL…"
-        value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-      />
-      <button class="load-btn" onclick="loadLocal()">Load</button>
-    </div>
-
-    <div class="input-row" id="youtubeInputRow" style="display:none">
-      <input
-        class="url-input"
-        id="ytVideoId"
-        placeholder="YouTube video ID (e.g. dQw4w9WgXcQ)"
-      />
-      <button class="load-btn" onclick="loadYouTube()">Play</button>
-    </div>
-
-    <!-- ── Player ── -->
-    <div class="player-card">
-      <div id="playerMount" class="jsp-player"></div>
-      <div class="player-info">
-        <div class="player-info__title" id="playerTitle">Big Buck Bunny</div>
-        <div class="player-info__meta" id="playerMeta">
-          Open-source sample · Blender Foundation
-          <span id="ytBadge" class="yt-badge" style="display:none">▶ YouTube</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Now Playing section -->
-    <div class="section-header">
-      <span class="section-title">Up Next</span>
-      <span class="section-link">Shuffle</span>
-    </div>
-
-    <div class="video-list">
-
-      <div class="video-item" onclick="queueLocal('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4','Big Buck Bunny','Blender · 9:56')">
-        <div class="video-item__thumb">
-          <div class="video-item__thumb-placeholder">🐰</div>
-          <span class="video-item__duration">9:56</span>
-        </div>
-        <div class="video-item__info">
-          <div class="video-item__title">Big Buck Bunny</div>
-          <div class="video-item__meta">Blender Foundation · MP4</div>
+      /* ── Scrolling marquee for long titles ──────────────────────────────── */
+      @keyframes marquee {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="phone-frame">
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <span class="status-bar__time" id="statusTime">9:41</span>
+        <div class="status-bar__icons">
+          <span>●●●</span>
+          <span>WiFi</span>
+          <span>🔋</span>
         </div>
       </div>
 
-      <div class="video-item" onclick="queueLocal('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4','Elephants Dream','Blender · 10:54')">
-        <div class="video-item__thumb">
-          <div class="video-item__thumb-placeholder">🐘</div>
-          <span class="video-item__duration">10:54</span>
-        </div>
-        <div class="video-item__info">
-          <div class="video-item__title">Elephants Dream</div>
-          <div class="video-item__meta">Blender Foundation · MP4</div>
-        </div>
+      <!-- App Header -->
+      <div class="app-header">
+        <div class="app-logo">▶</div>
+        <span class="app-name">JS Player</span>
+        <div class="app-header__spacer"></div>
+        <button class="icon-btn" aria-label="Search">🔍</button>
+        <button class="icon-btn" aria-label="More">⋯</button>
       </div>
 
-      <div class="video-item" onclick="queueLocal('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4','For Bigger Blazes','Google · 0:15')">
-        <div class="video-item__thumb">
-          <div class="video-item__thumb-placeholder">🔥</div>
-          <span class="video-item__duration">0:15</span>
+      <!-- Scrollable Content -->
+      <div class="app-content">
+        <!-- Source Tabs -->
+        <div class="source-tabs">
+          <button
+            class="source-tab active"
+            id="tabLocal"
+            onclick="switchTab('local')"
+          >
+            📁 Local
+          </button>
+          <button
+            class="source-tab"
+            id="tabYoutube"
+            onclick="switchTab('youtube')"
+          >
+            ▶ YouTube
+          </button>
         </div>
-        <div class="video-item__info">
-          <div class="video-item__title">For Bigger Blazes</div>
-          <div class="video-item__meta">Google Sample · MP4</div>
-        </div>
-      </div>
 
-      <div class="video-item" onclick="queueLocal('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4','Subaru Outback','Google · 0:22')">
-        <div class="video-item__thumb">
-          <div class="video-item__thumb-placeholder">🚗</div>
-          <span class="video-item__duration">0:22</span>
+        <!-- URL Input -->
+        <div class="input-row" id="localInputRow">
+          <input
+            class="url-input"
+            id="videoUrl"
+            type="url"
+            placeholder="Paste a .mp4 / .webm URL…"
+            value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+          />
+          <button class="load-btn" onclick="loadLocal()">Load</button>
         </div>
-        <div class="video-item__info">
-          <div class="video-item__title">Subaru Outback</div>
-          <div class="video-item__meta">Google Sample · MP4</div>
-        </div>
-      </div>
 
+        <div class="input-row" id="youtubeInputRow" style="display: none">
+          <input
+            class="url-input"
+            id="ytVideoId"
+            placeholder="YouTube video ID (e.g. dQw4w9WgXcQ)"
+          />
+          <button class="load-btn" onclick="loadYouTube()">Play</button>
+        </div>
+
+        <!-- ── Player ── -->
+        <div class="player-card">
+          <div id="playerMount" class="jsp-player"></div>
+          <div class="player-info">
+            <div class="player-info__title" id="playerTitle">
+              Big Buck Bunny
+            </div>
+            <div class="player-info__meta" id="playerMeta">
+              Open-source sample · Blender Foundation
+              <span id="ytBadge" class="yt-badge" style="display: none"
+                >▶ YouTube</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Now Playing section -->
+        <div class="section-header">
+          <span class="section-title">Up Next</span>
+          <span class="section-link">Shuffle</span>
+        </div>
+
+        <div class="video-list">
+          <div
+            class="video-item"
+            onclick="
+              queueLocal(
+                'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+                'Big Buck Bunny',
+                'Blender · 9:56',
+              )
+            "
+          >
+            <div class="video-item__thumb">
+              <div class="video-item__thumb-placeholder">🐰</div>
+              <span class="video-item__duration">9:56</span>
+            </div>
+            <div class="video-item__info">
+              <div class="video-item__title">Big Buck Bunny</div>
+              <div class="video-item__meta">Blender Foundation · MP4</div>
+            </div>
+          </div>
+
+          <div
+            class="video-item"
+            onclick="
+              queueLocal(
+                'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+                'Elephants Dream',
+                'Blender · 10:54',
+              )
+            "
+          >
+            <div class="video-item__thumb">
+              <div class="video-item__thumb-placeholder">🐘</div>
+              <span class="video-item__duration">10:54</span>
+            </div>
+            <div class="video-item__info">
+              <div class="video-item__title">Elephants Dream</div>
+              <div class="video-item__meta">Blender Foundation · MP4</div>
+            </div>
+          </div>
+
+          <div
+            class="video-item"
+            onclick="
+              queueLocal(
+                'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+                'For Bigger Blazes',
+                'Google · 0:15',
+              )
+            "
+          >
+            <div class="video-item__thumb">
+              <div class="video-item__thumb-placeholder">🔥</div>
+              <span class="video-item__duration">0:15</span>
+            </div>
+            <div class="video-item__info">
+              <div class="video-item__title">For Bigger Blazes</div>
+              <div class="video-item__meta">Google Sample · MP4</div>
+            </div>
+          </div>
+
+          <div
+            class="video-item"
+            onclick="
+              queueLocal(
+                'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
+                'Subaru Outback',
+                'Google · 0:22',
+              )
+            "
+          >
+            <div class="video-item__thumb">
+              <div class="video-item__thumb-placeholder">🚗</div>
+              <span class="video-item__duration">0:22</span>
+            </div>
+            <div class="video-item__info">
+              <div class="video-item__title">Subaru Outback</div>
+              <div class="video-item__meta">Google Sample · MP4</div>
+            </div>
+          </div>
+        </div>
+        <!-- /video-list -->
+
+        <div style="height: 16px"></div>
+      </div>
+      <!-- /app-content -->
+
+      <!-- Bottom Nav -->
+      <nav class="bottom-nav">
+        <button class="nav-item active">
+          <span class="nav-item__icon">🏠</span>Home
+        </button>
+        <button class="nav-item">
+          <span class="nav-item__icon">📚</span>Library
+        </button>
+        <button class="nav-item">
+          <span class="nav-item__icon">▶</span>YouTube
+        </button>
+        <button class="nav-item">
+          <span class="nav-item__icon">🔍</span>Search
+        </button>
+        <button class="nav-item">
+          <span class="nav-item__icon">⚙️</span>Settings
+        </button>
+      </nav>
     </div>
-    <!-- /video-list -->
+    <!-- /phone-frame -->
 
-    <div style="height: 16px"></div>
+    <script type="module">
+      import { createPlayer } from '../src/index.js';
 
-  </div>
-  <!-- /app-content -->
+      // ── Bootstrap local player ───────────────────────────────────────────────
+      let instance = createPlayer('#playerMount', 'local');
+      let ytInstance = null;
+      let currentTab = 'local';
 
-  <!-- Bottom Nav -->
-  <nav class="bottom-nav">
-    <button class="nav-item active">
-      <span class="nav-item__icon">🏠</span>Home
-    </button>
-    <button class="nav-item">
-      <span class="nav-item__icon">📚</span>Library
-    </button>
-    <button class="nav-item">
-      <span class="nav-item__icon">▶</span>YouTube
-    </button>
-    <button class="nav-item">
-      <span class="nav-item__icon">🔍</span>Search
-    </button>
-    <button class="nav-item">
-      <span class="nav-item__icon">⚙️</span>Settings
-    </button>
-  </nav>
+      // Auto-load sample on start
+      instance.player.load(
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      );
 
-</div>
-<!-- /phone-frame -->
+      // ── Live status bar clock ────────────────────────────────────────────────
+      function tick() {
+        const now = new Date();
+        document.getElementById('statusTime').textContent =
+          now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+      tick();
+      setInterval(tick, 30000);
 
-<script type="module">
-  import { createPlayer } from '../src/index.js';
+      // ── Tab switching ────────────────────────────────────────────────────────
+      window.switchTab = (tab) => {
+        currentTab = tab;
+        document
+          .getElementById('tabLocal')
+          .classList.toggle('active', tab === 'local');
+        document
+          .getElementById('tabYoutube')
+          .classList.toggle('active', tab === 'youtube');
+        document.getElementById('localInputRow').style.display =
+          tab === 'local' ? '' : 'none';
+        document.getElementById('youtubeInputRow').style.display =
+          tab === 'youtube' ? '' : 'none';
+        document.getElementById('ytBadge').style.display =
+          tab === 'youtube' ? '' : 'none';
 
-  // ── Bootstrap local player ───────────────────────────────────────────────
-  let instance = createPlayer('#playerMount', 'local');
-  let ytInstance = null;
-  let currentTab = 'local';
+        if (tab === 'youtube' && !ytInstance) {
+          // Rebuild mount for YouTube player
+          instance.player.destroy();
+          const mount = document.getElementById('playerMount');
+          mount.innerHTML = '';
+          mount.className = 'jsp-player';
+          ytInstance = createPlayer(mount, 'youtube');
+          instance = ytInstance;
+        } else if (tab === 'local' && ytInstance) {
+          ytInstance.player.destroy();
+          ytInstance = null;
+          const mount = document.getElementById('playerMount');
+          mount.innerHTML = '';
+          mount.className = 'jsp-player';
+          instance = createPlayer(mount, 'local');
+        }
+      };
 
-  // Auto-load sample on start
-  instance.player.load(
-    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
-  );
+      // ── Load local video ─────────────────────────────────────────────────────
+      window.loadLocal = () => {
+        const url = document.getElementById('videoUrl').value.trim();
+        if (!url) return;
+        if (currentTab !== 'local') window.switchTab('local');
+        instance.player.load(url);
+        instance.player.play();
+        document.getElementById('playerTitle').textContent = url
+          .split('/')
+          .pop()
+          .replace(/\.[^.]+$/, '');
+        document.getElementById('playerMeta').textContent = 'Local file';
+      };
 
-  // ── Live status bar clock ────────────────────────────────────────────────
-  function tick() {
-    const now = new Date();
-    document.getElementById('statusTime').textContent =
-      now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-  tick();
-  setInterval(tick, 30000);
+      // ── Load YouTube video ───────────────────────────────────────────────────
+      window.loadYouTube = () => {
+        const id = document.getElementById('ytVideoId').value.trim();
+        if (!id) return;
+        if (currentTab !== 'youtube') window.switchTab('youtube');
+        instance.player.load(id);
+        document.getElementById('playerTitle').textContent = `YouTube: ${id}`;
+        document.getElementById('playerMeta').innerHTML =
+          '<span class="yt-badge">▶ YouTube</span>';
+      };
 
-  // ── Tab switching ────────────────────────────────────────────────────────
-  window.switchTab = (tab) => {
-    currentTab = tab;
-    document.getElementById('tabLocal').classList.toggle('active', tab === 'local');
-    document.getElementById('tabYoutube').classList.toggle('active', tab === 'youtube');
-    document.getElementById('localInputRow').style.display = tab === 'local' ? '' : 'none';
-    document.getElementById('youtubeInputRow').style.display = tab === 'youtube' ? '' : 'none';
-    document.getElementById('ytBadge').style.display = tab === 'youtube' ? '' : 'none';
+      // ── Queue items ──────────────────────────────────────────────────────────
+      window.queueLocal = (url, title, meta) => {
+        if (currentTab !== 'local') window.switchTab('local');
+        instance.player.load(url);
+        instance.player.play();
+        document.getElementById('playerTitle').textContent = title;
+        document.getElementById('playerMeta').textContent = meta;
+        document.getElementById('videoUrl').value = url;
+      };
 
-    if (tab === 'youtube' && !ytInstance) {
-      // Rebuild mount for YouTube player
-      instance.player.destroy();
-      const mount = document.getElementById('playerMount');
-      mount.innerHTML = '';
-      mount.className = 'jsp-player';
-      ytInstance = createPlayer(mount, 'youtube');
-      instance = ytInstance;
-    } else if (tab === 'local' && ytInstance) {
-      ytInstance.player.destroy();
-      ytInstance = null;
-      const mount = document.getElementById('playerMount');
-      mount.innerHTML = '';
-      mount.className = 'jsp-player';
-      instance = createPlayer(mount, 'local');
-    }
-  };
+      // ── Deep-link: ?tab=youtube ──────────────────────────────────────────────
+      const initTab = new URLSearchParams(location.search).get('tab');
+      if (initTab === 'youtube') window.switchTab('youtube');
 
-  // ── Load local video ─────────────────────────────────────────────────────
-  window.loadLocal = () => {
-    const url = document.getElementById('videoUrl').value.trim();
-    if (!url) return;
-    if (currentTab !== 'local') window.switchTab('local');
-    instance.player.load(url);
-    instance.player.play();
-    document.getElementById('playerTitle').textContent = url.split('/').pop().replace(/\.[^.]+$/, '');
-    document.getElementById('playerMeta').textContent = 'Local file';
-  };
-
-  // ── Load YouTube video ───────────────────────────────────────────────────
-  window.loadYouTube = () => {
-    const id = document.getElementById('ytVideoId').value.trim();
-    if (!id) return;
-    if (currentTab !== 'youtube') window.switchTab('youtube');
-    instance.player.load(id);
-    document.getElementById('playerTitle').textContent = `YouTube: ${id}`;
-    document.getElementById('playerMeta').innerHTML =
-      '<span class="yt-badge">▶ YouTube</span>';
-  };
-
-  // ── Queue items ──────────────────────────────────────────────────────────
-  window.queueLocal = (url, title, meta) => {
-    if (currentTab !== 'local') window.switchTab('local');
-    instance.player.load(url);
-    instance.player.play();
-    document.getElementById('playerTitle').textContent = title;
-    document.getElementById('playerMeta').textContent = meta;
-    document.getElementById('videoUrl').value = url;
-  };
-
-  // ── Deep-link: ?tab=youtube ──────────────────────────────────────────────
-  const initTab = new URLSearchParams(location.search).get('tab');
-  if (initTab === 'youtube') window.switchTab('youtube');
-
-  // ── Service Worker (PWA / offline) ──────────────────────────────────────
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('../public/sw.js').catch(() => {});
-  }
-</script>
-
-</body>
+      // ── Service Worker (PWA / offline) ──────────────────────────────────────
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('../public/sw.js').catch(() => {});
+      }
+    </script>
+  </body>
 </html>
