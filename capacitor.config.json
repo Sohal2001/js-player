@@ -1,0 +1,40 @@
+{
+  "appId": "com.juhisohal.jsplayer",
+  "appName": "JS Player",
+  "webDir": "dist-app",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": [
+      "*.youtube.com",
+      "*.ytimg.com",
+      "*.googleapis.com"
+    ]
+  },
+  "android": {
+    "backgroundColor": "#0f0f0f",
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "ios": {
+    "backgroundColor": "#0f0f0f",
+    "contentInset": "automatic",
+    "scrollEnabled": true,
+    "limitsNavigationsToAppBoundDomains": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#0f0f0f",
+      "showSpinner": false,
+      "androidSpinnerStyle": "small",
+      "iosSpinnerStyle": "small",
+      "spinnerColor": "#e53935"
+    },
+    "StatusBar": {
+      "style": "Dark",
+      "backgroundColor": "#0f0f0f"
+    }
+  }
+}

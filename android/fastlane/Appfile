@@ -1,0 +1,2 @@
+json_key_file("")  # path unused — key provided via env var in CI
+package_name("com.juhisohal.jsplayer")

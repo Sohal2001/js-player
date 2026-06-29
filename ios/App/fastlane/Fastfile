@@ -1,0 +1,49 @@
+default_platform(:ios)
+
+platform :ios do
+
+  desc "Fetch certificates & provisioning profiles via match"
+  lane :certificates do
+    match(
+      type:        "appstore",
+      app_identifier: "com.juhisohal.jsplayer",
+      readonly:    true              # CI always reads, never creates
+    )
+  end
+
+  desc "Build and sign the IPA"
+  lane :build do
+    certificates
+    build_app(
+      workspace:      "App.xcworkspace",
+      scheme:         "App",
+      configuration:  "Release",
+      export_method:  "app-store",
+      output_directory: "./build",
+      output_name:    "JSPlayer.ipa"
+    )
+  end
+
+  desc "Upload to App Store Connect (TestFlight)"
+  lane :deploy_testflight do
+    build
+    upload_to_testflight(
+      api_key_path: "fastlane/api_key.json",
+      skip_waiting_for_build_processing: true
+    )
+  end
+
+  desc "Submit to App Store Review"
+  lane :deploy_appstore do
+    build
+    deliver(
+      api_key_path:         "fastlane/api_key.json",
+      submit_for_review:    true,
+      automatic_release:    false,
+      force:                true,
+      skip_metadata:        false,
+      skip_screenshots:     true
+    )
+  end
+
+end

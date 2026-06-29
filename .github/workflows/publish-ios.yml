@@ -1,0 +1,114 @@
+name: Publish iOS — App Store Connect
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      destination:
+        description: "Publish destination"
+        required: true
+        default: "testflight"
+        type: choice
+        options: [testflight, appstore]
+
+# ── Required GitHub Secrets ─────────────────────────────────────────────────
+# CERTIFICATES_P12             base64-encoded Apple Distribution .p12 cert
+# CERTIFICATES_PASSWORD        .p12 password
+# PROVISIONING_PROFILE_BASE64  base64-encoded App Store provisioning profile
+# APPLE_TEAM_ID                10-character Apple Developer team ID
+# APP_STORE_CONNECT_API_KEY_ID        App Store Connect API key ID
+# APP_STORE_CONNECT_API_ISSUER_ID     App Store Connect issuer ID
+# APP_STORE_CONNECT_API_KEY_BASE64    base64-encoded .p8 private key
+# ────────────────────────────────────────────────────────────────────────────
+
+jobs:
+  publish-ios:
+    name: Build & publish IPA → ${{ github.event.inputs.destination || 'testflight' }}
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests (gate)
+        run: npm test
+
+      - name: Build web app (dist-app/)
+        run: npm run build
+
+      - name: Capacitor sync
+        run: npx cap sync ios
+
+      - name: Install CocoaPods dependencies
+        working-directory: ios/App
+        run: pod install --repo-update
+
+      - name: Import Distribution Certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.CERTIFICATES_P12 }}
+          p12-password:    ${{ secrets.CERTIFICATES_PASSWORD }}
+
+      - name: Install provisioning profile
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 -d \
+            > ~/Library/MobileDevice/Provisioning\ Profiles/jsplayer.mobileprovision
+
+      - name: Write App Store Connect API key
+        run: |
+          mkdir -p ios/App/fastlane
+          cat > ios/App/fastlane/api_key.json <<EOF
+          {
+            "key_id": "${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}",
+            "issuer_id": "${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}",
+            "key": "$(echo ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }} | base64 -d | tr -d '\n')",
+            "in_house": false
+          }
+          EOF
+
+      - name: Build & Archive IPA
+        working-directory: ios/App
+        run: |
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/JSPlayer.xcarchive \
+            archive \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            PROVISIONING_PROFILE_SPECIFIER="jsplayer" | xcpretty
+
+          xcodebuild \
+            -exportArchive \
+            -archivePath $RUNNER_TEMP/JSPlayer.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath $RUNNER_TEMP/JSPlayer
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-release-ipa-${{ github.ref_name }}
+          path: ${{ runner.temp }}/JSPlayer/JSPlayer.ipa
+          retention-days: 30
+
+      - name: Upload to App Store Connect
+        env:
+          DESTINATION: ${{ github.event.inputs.destination || 'testflight' }}
+        run: |
+          xcrun altool \
+            --upload-app \
+            --type ios \
+            --file "$RUNNER_TEMP/JSPlayer/JSPlayer.ipa" \
+            --apiKey "${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}" \
+            --apiIssuer "${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}"

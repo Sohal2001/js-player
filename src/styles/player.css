@@ -1,0 +1,307 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Juhi Sohal Player (JS Player) — Core Styles
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --jsp-bg: #0f0f0f;
+  --jsp-surface: #1a1a1a;
+  --jsp-border: #2a2a2a;
+  --jsp-accent: #e53935;
+  --jsp-accent-hover: #ff5252;
+  --jsp-text: #ffffff;
+  --jsp-text-secondary: #aaaaaa;
+  --jsp-radius: 12px;
+  --jsp-controls-height: 52px;
+  --jsp-transition: 0.18s ease;
+}
+
+/* ── Container ─────────────────────────────────────────────────────────── */
+
+.jsp-player {
+  position: relative;
+  background: var(--jsp-bg);
+  border-radius: var(--jsp-radius);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--jsp-text);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Video area ────────────────────────────────────────────────────────── */
+
+.jsp-video-wrapper {
+  position: relative;
+  width: 100%;
+  background: #000;
+  aspect-ratio: 16 / 9;
+}
+
+.jsp-video-wrapper video,
+.jsp-video-wrapper iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Tap-to-play overlay */
+.jsp-tap-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+}
+
+.jsp-tap-overlay__icon {
+  width: 64px;
+  height: 64px;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  transition: opacity var(--jsp-transition), transform var(--jsp-transition);
+  opacity: 0;
+}
+
+.jsp-player[data-state="paused"] .jsp-tap-overlay__icon,
+.jsp-player[data-state="idle"] .jsp-tap-overlay__icon {
+  opacity: 1;
+}
+
+.jsp-tap-overlay:active .jsp-tap-overlay__icon {
+  transform: scale(0.9);
+}
+
+/* ── Controls bar ──────────────────────────────────────────────────────── */
+
+.jsp-controls {
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
+  padding: 8px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jsp-controls__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+
+.jsp-btn {
+  background: none;
+  border: none;
+  color: var(--jsp-text);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  line-height: 1;
+  touch-action: manipulation;
+  transition: background var(--jsp-transition);
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jsp-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.jsp-btn:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Progress bar ──────────────────────────────────────────────────────── */
+
+.jsp-progress {
+  position: relative;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 0 2px;
+  outline: none;
+}
+
+.jsp-progress:focus-visible {
+  outline: 2px solid var(--jsp-accent);
+  border-radius: 4px;
+}
+
+.jsp-progress__track {
+  position: relative;
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 2px;
+  overflow: visible;
+}
+
+.jsp-progress__fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0%;
+  background: var(--jsp-accent);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+  pointer-events: none;
+}
+
+.jsp-progress__thumb {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform var(--jsp-transition), left 0.1s linear;
+  pointer-events: none;
+  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+}
+
+.jsp-progress:hover .jsp-progress__thumb,
+.jsp-progress:focus .jsp-progress__thumb {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* ── Time display ──────────────────────────────────────────────────────── */
+
+.jsp-time {
+  font-size: 12px;
+  color: var(--jsp-text-secondary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Volume ────────────────────────────────────────────────────────────── */
+
+.jsp-volume {
+  -webkit-appearance: none;
+  width: 72px;
+  height: 4px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 2px;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.jsp-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.jsp-volume::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+
+/* ── Speed selector ────────────────────────────────────────────────────── */
+
+.jsp-speed {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: var(--jsp-text);
+  font-size: 12px;
+  border-radius: 6px;
+  padding: 3px 6px;
+  cursor: pointer;
+  margin-left: auto;
+  outline: none;
+}
+
+.jsp-speed:focus-visible {
+  outline: 2px solid var(--jsp-accent);
+}
+
+/* ── Title bar ─────────────────────────────────────────────────────────── */
+
+.jsp-titlebar {
+  padding: 10px 14px 4px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.jsp-titlebar__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.jsp-title {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--jsp-text);
+}
+
+.jsp-subtitle {
+  font-size: 12px;
+  color: var(--jsp-text-secondary);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Loading / error states ────────────────────────────────────────────── */
+
+.jsp-state-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.65);
+  color: var(--jsp-text);
+  font-size: 13px;
+  gap: 10px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--jsp-transition);
+}
+
+.jsp-player[data-state="loading"] .jsp-state-overlay { opacity: 1; }
+.jsp-player[data-state="error"]   .jsp-state-overlay { opacity: 1; pointer-events: auto; }
+
+.jsp-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255,255,255,0.2);
+  border-top-color: var(--jsp-accent);
+  border-radius: 50%;
+  animation: jsp-spin 0.75s linear infinite;
+}
+
+@keyframes jsp-spin {
+  to { transform: rotate(360deg); }
+}

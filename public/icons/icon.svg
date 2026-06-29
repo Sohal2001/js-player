@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="114" fill="#0f0f0f"/>
+  <rect x="40" y="40" width="432" height="432" rx="80" fill="#1a1a1a"/>
+  <!-- Play triangle -->
+  <polygon points="180,150 180,362 370,256" fill="#e53935"/>
+  <!-- Accent bar bottom -->
+  <rect x="100" y="400" width="312" height="18" rx="9" fill="#e53935" opacity="0.35"/>
+</svg>

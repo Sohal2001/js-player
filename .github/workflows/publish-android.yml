@@ -1,0 +1,89 @@
+name: Publish Android — Google Play
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      track:
+        description: "Play Store track"
+        required: true
+        default: "internal"
+        type: choice
+        options: [internal, alpha, beta, production]
+
+# ── Required GitHub Secrets ─────────────────────────────────────────────────
+# KEYSTORE_BASE64          base64-encoded .jks release keystore
+# KEYSTORE_PASSWORD        keystore password
+# KEY_ALIAS                key alias inside the keystore
+# KEY_PASSWORD             key password
+# GOOGLE_PLAY_JSON_KEY     full JSON of Google Play service-account credentials
+# ────────────────────────────────────────────────────────────────────────────
+
+jobs:
+  publish-android:
+    name: Build & publish AAB → Play Store (${{ github.event.inputs.track || 'internal' }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests (gate)
+        run: npm test
+
+      - name: Build web app (dist-app/)
+        run: npm run build
+
+      - name: Capacitor sync
+        run: npx cap sync android
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+
+      - name: Decode release keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > jsplayer-release.jks
+
+      - name: Build release AAB
+        working-directory: android
+        env:
+          STORE_FILE:     ../jsplayer-release.jks
+          STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS:      ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD:   ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-aab-${{ github.ref_name }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+          packageName:   com.juhisohal.jsplayer
+          releaseFiles:  android/app/build/outputs/bundle/release/app-release.aab
+          track:         ${{ github.event.inputs.track || 'internal' }}
+          status:        completed
+          whatsNewDirectory: android/fastlane/metadata/android/en-US/changelogs
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/bundle/release/app-release.aab
+          generate_release_notes: true
+          draft: false

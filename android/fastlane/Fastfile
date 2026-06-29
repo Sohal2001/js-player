@@ -1,0 +1,40 @@
+default_platform(:android)
+
+platform :android do
+
+  desc "Build release AAB"
+  lane :build do
+    gradle(
+      task:       "bundle",
+      build_type: "Release",
+      project_dir: "."
+    )
+  end
+
+  desc "Upload to Google Play Internal track"
+  lane :deploy_internal do
+    build
+    upload_to_play_store(
+      track:       "internal",
+      aab:         "app/build/outputs/bundle/release/app-release.aab",
+      package_name: "com.juhisohal.jsplayer",
+      json_key_data: ENV["GOOGLE_PLAY_JSON_KEY"]
+    )
+  end
+
+  desc "Promote Internal → Production (10% rollout)"
+  lane :promote_production do
+    upload_to_play_store(
+      track:                  "internal",
+      track_promote_to:       "production",
+      rollout:                "0.1",
+      package_name:           "com.juhisohal.jsplayer",
+      json_key_data:          ENV["GOOGLE_PLAY_JSON_KEY"],
+      skip_upload_apk:        true,
+      skip_upload_aab:        true,
+      skip_upload_metadata:   true,
+      skip_upload_screenshots:true
+    )
+  end
+
+end

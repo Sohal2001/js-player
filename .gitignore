@@ -1,0 +1,32 @@
+node_modules/
+dist/
+dist-app/
+coverage/
+.DS_Store
+
+# Capacitor build outputs
+android/app/build/
+android/.gradle/
+ios/App/build/
+ios/App/Pods/
+ios/App/App.xcworkspace/xcuserdata/
+
+# Release signing (NEVER commit these)
+*.jks
+*.keystore
+keystore.properties
+ios/App/fastlane/api_key.json
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Playwright
+test-results/
+playwright-report/
