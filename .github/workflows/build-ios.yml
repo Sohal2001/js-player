@@ -40,21 +40,21 @@ jobs:
       - name: Build (iOS Simulator, no code signing)
         working-directory: ios/App
         run: |
+          # -target (no shared scheme exists) can't be combined with
+          # -derivedDataPath, so send the product to a known dir instead.
           xcodebuild \
             -project App.xcodeproj \
             -target App \
             -configuration Debug \
             -sdk iphonesimulator \
-            -derivedDataPath "$RUNNER_TEMP/dd" \
-            -clonedSourcePackagesDirPath "$RUNNER_TEMP/spm" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
+            CONFIGURATION_BUILD_DIR="$RUNNER_TEMP/out" \
             build
 
       - name: Package .app
         run: |
-          APP_DIR="$RUNNER_TEMP/dd/Build/Products/Debug-iphonesimulator"
-          cd "$APP_DIR"
+          cd "$RUNNER_TEMP/out"
           zip -r "$RUNNER_TEMP/JSPlayer-simulator-app.zip" App.app
 
       - name: Upload .app artifact
