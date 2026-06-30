@@ -35,19 +35,18 @@ jobs:
       - name: Capacitor sync (iOS)
         run: npx cap sync ios
 
-      - name: Install CocoaPods dependencies
-        working-directory: ios/App
-        run: pod install --repo-update
-
+      # This is a Swift Package Manager Capacitor project (no CocoaPods/Podfile,
+      # no shared scheme), so build the project target directly.
       - name: Build (iOS Simulator, no code signing)
         working-directory: ios/App
         run: |
           xcodebuild \
-            -workspace App.xcworkspace \
-            -scheme App \
+            -project App.xcodeproj \
+            -target App \
             -configuration Debug \
             -sdk iphonesimulator \
             -derivedDataPath "$RUNNER_TEMP/dd" \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/spm" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             build
