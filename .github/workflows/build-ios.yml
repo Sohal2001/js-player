@@ -1,0 +1,66 @@
+name: Build iOS app (unsigned)
+
+# iOS analog of build-apk.yml. Apple requires code-signing for ANY on-device
+# install, so there is no "download & sideload" iOS build like the Android APK.
+# This workflow compiles the iOS app on macOS WITHOUT signing (iOS Simulator
+# build) to verify it builds, and uploads the .app as an artifact.
+#
+# For a real iPhone-installable build use the signed Release pipeline
+# (publish-ios.yml → TestFlight / App Store). For a no-Apple-account install,
+# iOS users can add the PWA to their Home Screen from the GitHub Pages site.
+#
+# Manual only (macOS runner minutes are billed at a higher rate).
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build iOS app (Simulator, unsigned)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app (dist-app/)
+        run: npm run build
+
+      - name: Capacitor sync (iOS)
+        run: npx cap sync ios
+
+      - name: Install CocoaPods dependencies
+        working-directory: ios/App
+        run: pod install --repo-update
+
+      - name: Build (iOS Simulator, no code signing)
+        working-directory: ios/App
+        run: |
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath "$RUNNER_TEMP/dd" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Package .app
+        run: |
+          APP_DIR="$RUNNER_TEMP/dd/Build/Products/Debug-iphonesimulator"
+          cd "$APP_DIR"
+          zip -r "$RUNNER_TEMP/JSPlayer-simulator-app.zip" App.app
+
+      - name: Upload .app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: js-player-ios-simulator-app
+          path: ${{ runner.temp }}/JSPlayer-simulator-app.zip
+          retention-days: 30

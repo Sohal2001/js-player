@@ -54,6 +54,7 @@ Push to feature branch
 | `.github/workflows/ci.yml` | push / PR | Tests (unit + integration + functional), lint, format, build, E2E |
 | `.github/workflows/release.yml` | manual | **One-click release** — bump version, tag, and publish to the selected store(s) |
 | `.github/workflows/build-apk.yml` | push to `main` / manual | Build a debug **APK** and publish a GitHub Pages download/demo site |
+| `.github/workflows/build-ios.yml` | manual | Build the **iOS** app unsigned (Simulator) and upload it as an artifact (build check) |
 | `.github/workflows/publish-android.yml` | manual / called by Release | Build signed AAB → Google Play |
 | `.github/workflows/publish-ios.yml` | manual / called by Release | Build signed IPA → App Store Connect |
 | `.github/dependabot.yml` | schedule | Weekly npm + GitHub Actions updates, monthly Gradle |

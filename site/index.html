@@ -163,17 +163,36 @@
       </div>
 
       <div class="card">
+        <h2>🍏 Install on iPhone / iPad</h2>
+        <p class="note">
+          Apple requires every on-device app to be code-signed, so there's no
+          sideloadable iOS download like the Android APK. Install the app as a
+          PWA instead — it runs full-screen like a native app:
+        </p>
+        <ol>
+          <li>Open <a href="./app/">the app</a> in <strong>Safari</strong> on your iPhone/iPad.</li>
+          <li>Tap the <strong>Share</strong> button (the square with an arrow).</li>
+          <li>Choose <strong>Add to Home Screen</strong> → <strong>Add</strong>.</li>
+        </ol>
+        <p class="note">
+          For a true App Store / TestFlight build, the signed
+          <code>publish-ios</code> release pipeline is used (requires an Apple
+          Developer account).
+        </p>
+      </div>
+
+      <div class="card">
         <h2>✨ Features</h2>
         <div class="grid">
           <ul>
-            <li>Local / direct-URL video (HTML5)</li>
-            <li>YouTube playback (official IFrame API)</li>
-            <li>Mobile-first, touch-friendly controls</li>
+            <li>Local <code>.mp3</code> songs (Music)</li>
+            <li>Local <code>.mp4</code> videos (Video)</li>
+            <li>Album art &amp; now-playing screen</li>
           </ul>
           <ul>
-            <li>Play / pause, seek, volume, speed</li>
-            <li>Keyboard-accessible seek bar</li>
-            <li>Installable PWA + native Android/iOS</li>
+            <li>Shuffle, repeat, prev / next</li>
+            <li>Seek, mini-player, auto-advance</li>
+            <li>No ads · no tracking · works offline</li>
           </ul>
         </div>
       </div>
@@ -190,11 +209,10 @@
       </div>
 
       <div class="card">
-        <h2>🔒 YouTube compliance</h2>
+        <h2>🔒 Private by design</h2>
         <p class="note">
-          YouTube playback uses only the official YouTube IFrame Player API — no
-          video files are downloaded or stored, and YouTube's Terms of Service
-          apply to all YouTube content.
+          JS Player plays only the local files you choose. Nothing is uploaded,
+          tracked, or sent anywhere — no ads, no accounts, no network needed.
         </p>
       </div>
 
