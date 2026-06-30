@@ -35,7 +35,7 @@ jobs:
 
       - name: Upload coverage report
         if: matrix.node == 20
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage/
@@ -103,7 +103,7 @@ jobs:
         run: npm run build
 
       - name: Upload dist-app
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist-app
           path: dist-app/
@@ -141,7 +141,7 @@ jobs:
 
       - name: Upload E2E results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-results
           path: |
