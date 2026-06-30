@@ -8,6 +8,14 @@ Supports:
 
 ---
 
+## Download
+
+- **Android APK** (debug build, sideload): `https://sohal2001.github.io/js-player/js-player.apk`
+- **Try in browser** (live demo): `https://sohal2001.github.io/js-player/app/`
+
+> Published automatically by the `build-apk.yml` workflow → GitHub Pages.
+> Enable it once via repo **Settings → Pages → Source: GitHub Actions**.
+
 ## Quick Start
 
 ```bash

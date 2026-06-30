@@ -7,6 +7,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **APK + GitHub Pages workflow** (`.github/workflows/build-apk.yml`): builds an
+  installable debug APK (no secrets) and deploys a GitHub Pages site
+  (`site/index.html`) with a Download-APK button, install steps, and the live
+  web demo. APK is also saved as a workflow artifact.
 - One-click **Release workflow** (`.github/workflows/release.yml`): enter a
   version, pick the store(s)/track, and it bumps the web + native version
   numbers, tags `vX.Y.Z`, and publishes to Google Play and/or App Store Connect

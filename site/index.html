@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JS Player — Juhi Sohal Player</title>
+    <meta
+      name="description"
+      content="JS Player (Juhi Sohal Player) — a lightweight JavaScript video player for local files and YouTube. Download the Android APK or try it in your browser."
+    />
+    <style>
+      :root {
+        --bg: #0f0f0f;
+        --card: #1a1a1a;
+        --border: #2a2a2a;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+        --accent: #e53935;
+        --accent-2: #7c3aed;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: radial-gradient(circle at 50% 0%, #1b1b1b 0%, var(--bg) 60%);
+        color: var(--text);
+        line-height: 1.6;
+      }
+      .wrap {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 48px 20px 80px;
+      }
+      header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+      .logo {
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+      }
+      .logo span {
+        color: var(--accent);
+      }
+      .tag {
+        color: var(--muted);
+        margin-top: 8px;
+      }
+      .cta {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 32px 0;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 22px;
+        border-radius: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        transition: transform 0.12s ease, background 0.12s ease;
+      }
+      .btn:active {
+        transform: scale(0.97);
+      }
+      .btn--primary {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+      .btn--ghost {
+        background: var(--card);
+        color: var(--text);
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 22px 24px;
+        margin: 18px 0;
+      }
+      h2 {
+        font-size: 18px;
+        margin: 0 0 12px;
+      }
+      ol,
+      ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      li {
+        margin: 6px 0;
+      }
+      code {
+        background: #000;
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-size: 0.9em;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 24px;
+      }
+      .note {
+        color: var(--muted);
+        font-size: 0.9em;
+      }
+      a {
+        color: var(--accent-2);
+      }
+      footer {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.85em;
+        margin-top: 40px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="logo">JS Player <span>— Juhi Sohal Player</span></div>
+        <p class="tag">
+          A lightweight, mobile-first video player for local files & YouTube.
+        </p>
+        <div class="cta">
+          <a class="btn btn--primary" href="./js-player.apk" download>
+            ⬇ Download Android APK
+          </a>
+          <a class="btn btn--ghost" href="./app/">▶ Try it in your browser</a>
+        </div>
+        <p class="note">
+          The APK is a <strong>debug build</strong> for direct install / testing.
+          The Google&nbsp;Play release is produced separately by the signed
+          release pipeline.
+        </p>
+      </header>
+
+      <div class="card">
+        <h2>📲 Install the APK</h2>
+        <ol>
+          <li>Tap <strong>Download Android APK</strong> above on your phone.</li>
+          <li>
+            Open the downloaded <code>js-player.apk</code>. Android will ask to
+            allow installing from this source — enable
+            <em>Install unknown apps</em> for your browser/file manager.
+          </li>
+          <li>Tap <strong>Install</strong>, then open <strong>JS Player</strong>.</li>
+        </ol>
+        <p class="note">
+          Minimum Android 7.0 (API&nbsp;24). If an older debug build is already
+          installed, uninstall it first.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>✨ Features</h2>
+        <div class="grid">
+          <ul>
+            <li>Local / direct-URL video (HTML5)</li>
+            <li>YouTube playback (official IFrame API)</li>
+            <li>Mobile-first, touch-friendly controls</li>
+          </ul>
+          <ul>
+            <li>Play / pause, seek, volume, speed</li>
+            <li>Keyboard-accessible seek bar</li>
+            <li>Installable PWA + native Android/iOS</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📚 Documentation</h2>
+        <ul>
+          <li><a href="https://github.com/Sohal2001/js-player#readme">Project README</a></li>
+          <li><a href="https://github.com/Sohal2001/js-player/blob/main/docs/INTEGRATION.md">Integration guide</a></li>
+          <li><a href="https://github.com/Sohal2001/js-player/blob/main/docs/ARCHITECTURE.md">Architecture</a></li>
+          <li><a href="https://github.com/Sohal2001/js-player/blob/main/docs/PIPELINE.md">CI/CD & publishing</a></li>
+          <li><a href="https://github.com/Sohal2001/js-player/blob/main/docs/TESTING.md">Testing guide</a></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>🔒 YouTube compliance</h2>
+        <p class="note">
+          YouTube playback uses only the official YouTube IFrame Player API — no
+          video files are downloaded or stored, and YouTube's Terms of Service
+          apply to all YouTube content.
+        </p>
+      </div>
+
+      <footer>
+        Built from
+        <a href="https://github.com/Sohal2001/js-player">Sohal2001/js-player</a>
+        · Apache-2.0 · This page &amp; APK are published automatically by GitHub
+        Actions.
+      </footer>
+    </div>
+  </body>
+</html>

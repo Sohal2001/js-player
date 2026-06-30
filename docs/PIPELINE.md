@@ -53,9 +53,30 @@ Push to feature branch
 |------|---------|---------|
 | `.github/workflows/ci.yml` | push / PR | Tests (unit + integration + functional), lint, format, build, E2E |
 | `.github/workflows/release.yml` | manual | **One-click release** — bump version, tag, and publish to the selected store(s) |
+| `.github/workflows/build-apk.yml` | push to `main` / manual | Build a debug **APK** and publish a GitHub Pages download/demo site |
 | `.github/workflows/publish-android.yml` | manual / called by Release | Build signed AAB → Google Play |
 | `.github/workflows/publish-ios.yml` | manual / called by Release | Build signed IPA → App Store Connect |
 | `.github/dependabot.yml` | schedule | Weekly npm + GitHub Actions updates, monthly Gradle |
+
+## Downloadable APK + GitHub Pages (`build-apk.yml`)
+
+For sharing an installable build without the Play Store, this workflow builds a
+**debug APK** (self-signed — no secrets needed) and deploys a GitHub Pages site
+that documents the app and offers it for download.
+
+- **Enable once:** repo **Settings → Pages → Build and deployment → Source:
+  "GitHub Actions"**.
+- **Runs on:** every push to `main`, or manually (Actions → "Build APK & deploy
+  to GitHub Pages" → Run workflow).
+- **Publishes:**
+  - `https://<owner>.github.io/js-player/` — landing page with a **Download APK**
+    button + install instructions (source: `site/index.html`)
+  - `https://<owner>.github.io/js-player/js-player.apk` — the APK itself
+  - `https://<owner>.github.io/js-player/app/` — the live web demo
+  - the APK is also attached to the run as the `js-player-debug-apk` artifact
+
+> Debug APKs are for testing/sideloading only. Production builds for the stores
+> go through the signed Release pipeline below.
 
 ## One-click Release (`release.yml`)
 
