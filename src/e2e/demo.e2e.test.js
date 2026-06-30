@@ -1,20 +1,14 @@
 /**
- * End-to-end / UI functional tests — drives the live demo via Playwright.
+ * End-to-end / UI functional tests — drives the live MX-Player-style demo via
+ * Playwright against the Vite dev server (real Chromium).
  *
- * Run:  npm run dev &  # must be running on port 5177
- *       npx vitest run src/e2e/demo.e2e.test.js
- *
- * These tests use a real Chromium browser (headless) against the Vite dev server.
- * They exercise the full rendering stack: HTML, CSS, and all JS modules.
+ * Run:  npm run dev &   # must be running on port 5177
+ *       npm run test:e2e
  */
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { chromium } from 'playwright';
 
 const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:5177';
-
-// Prefer an explicit override, then Playwright's own resolution (set when
-// `npx playwright install` was used, as in CI). Falling back to `undefined`
-// lets Playwright locate its managed Chromium automatically.
 const CHROMIUM = process.env.E2E_CHROMIUM_PATH || undefined;
 
 let browser;
@@ -33,210 +27,147 @@ afterAll(async () => {
 
 beforeEach(async () => {
   page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-  await page.goto(BASE_URL, { waitUntil: 'networkidle' });
+  await page.goto(BASE_URL, { waitUntil: 'load' });
 });
 
-// ── Page structure ─────────────────────────────────────────────────────────
+// Build a tiny valid mono 16-bit PCM WAV so Chromium can treat it as audio.
+function makeWav(seconds = 0.3, rate = 8000) {
+  const samples = Math.floor(seconds * rate);
+  const buf = Buffer.alloc(44 + samples * 2);
+  buf.write('RIFF', 0);
+  buf.writeUInt32LE(36 + samples * 2, 4);
+  buf.write('WAVE', 8);
+  buf.write('fmt ', 12);
+  buf.writeUInt32LE(16, 16);
+  buf.writeUInt16LE(1, 20); // PCM
+  buf.writeUInt16LE(1, 22); // mono
+  buf.writeUInt32LE(rate, 24);
+  buf.writeUInt32LE(rate * 2, 28);
+  buf.writeUInt16LE(2, 32);
+  buf.writeUInt16LE(16, 34);
+  buf.write('data', 36);
+  buf.writeUInt32LE(samples * 2, 40);
+  return buf; // samples left as zero = silence
+}
 
-describe('Page loads correctly', () => {
+// ── App shell ────────────────────────────────────────────────────────────
+
+describe('App shell', () => {
   it('shows the app title "JS Player"', async () => {
-    const title = await page.textContent('.app-name');
-    expect(title).toContain('JS Player');
+    expect(await page.textContent('.app-title')).toContain('JS Player');
   });
 
-  it('renders the phone frame', async () => {
-    expect(await page.isVisible('.phone-frame')).toBe(true);
-  });
-
-  it('renders the status bar with a time string', async () => {
-    const time = await page.textContent('.status-bar__time');
-    expect(time).toMatch(/\d{1,2}:\d{2}/);
-  });
-
-  it('renders Local and YouTube source tabs', async () => {
-    expect(await page.isVisible('#tabLocal')).toBe(true);
-    expect(await page.isVisible('#tabYoutube')).toBe(true);
-  });
-
-  it('Local tab is active by default', async () => {
-    const cls = await page.getAttribute('#tabLocal', 'class');
-    expect(cls).toContain('active');
-  });
-
-  it('renders the URL input and Load button', async () => {
-    expect(await page.isVisible('#videoUrl')).toBe(true);
-    expect(await page.isVisible('button.load-btn')).toBe(true);
-  });
-
-  it('renders the player mount area', async () => {
-    expect(await page.isVisible('#playerMount')).toBe(true);
-  });
-
-  it('renders the "Up Next" section', async () => {
-    const heading = await page.textContent('.section-title');
-    expect(heading).toBe('Up Next');
-  });
-
-  it('renders 4 video items in the queue', async () => {
-    const items = await page.$$('.video-item');
-    expect(items.length).toBe(4);
-  });
-
-  it('renders the bottom navigation with 5 items', async () => {
-    const items = await page.$$('.nav-item');
-    expect(items.length).toBe(5);
-  });
-});
-
-// ── Player controls ────────────────────────────────────────────────────────
-
-describe('Player controls', () => {
-  it('player control bar is visible', async () => {
-    expect(await page.isVisible('.jsp-controls')).toBe(true);
-  });
-
-  it('progress bar is present', async () => {
-    expect(await page.isVisible('.jsp-progress')).toBe(true);
-  });
-
-  it('time display shows 0:00 / 0:00 initially', async () => {
-    const time = await page.textContent('.jsp-time');
-    expect(time).toContain('0:00');
-  });
-
-  it('speed selector has 1× as default', async () => {
-    const val = await page.$eval('.jsp-speed', (s) => s.value);
-    expect(val).toBe('1');
-  });
-
-  it('speed selector contains 1.5× option', async () => {
-    const options = await page.$$eval('.jsp-speed option', (opts) =>
-      opts.map((o) => o.value),
+  it('has Music and Video tabs, Music active by default', async () => {
+    expect(await page.isVisible('#tab-music')).toBe(true);
+    expect(await page.isVisible('#tab-video')).toBe(true);
+    expect(await page.getAttribute('#tab-music', 'class')).toContain('active');
+    expect(await page.getAttribute('#tab-video', 'class')).not.toContain(
+      'active',
     );
-    expect(options).toContain('1.5');
   });
 
-  it('volume slider is present', async () => {
-    expect(await page.isVisible('.jsp-volume')).toBe(true);
+  it('has an Add button and a file input accepting audio and video', async () => {
+    expect(await page.isVisible('#addBtn')).toBe(true);
+    const accept = await page.getAttribute('#fileInput', 'accept');
+    expect(accept).toContain('audio/*');
+    expect(accept).toContain('video/*');
+    expect(await page.getAttribute('#fileInput', 'multiple')).not.toBeNull();
+  });
+
+  it('shows the music empty state and hides the mini bar initially', async () => {
+    expect(await page.isVisible('#musicEmpty')).toBe(true);
+    expect(await page.getAttribute('#miniBar', 'class')).not.toContain('show');
+    // Video empty state lives in the (initially hidden) Video view.
+    await page.click('#tab-video');
+    expect(await page.isVisible('#videoEmpty')).toBe(true);
   });
 });
 
-// ── Tab switching ──────────────────────────────────────────────────────────
+// ── Tabs ─────────────────────────────────────────────────────────────────
 
 describe('Tab switching', () => {
-  it('clicking YouTube tab activates it', async () => {
-    await page.click('#tabYoutube');
-    const cls = await page.getAttribute('#tabYoutube', 'class');
-    expect(cls).toContain('active');
-  });
-
-  it('clicking YouTube tab deactivates Local tab', async () => {
-    await page.click('#tabYoutube');
-    const cls = await page.getAttribute('#tabLocal', 'class');
-    expect(cls).not.toContain('active');
-  });
-
-  it('YouTube tab shows video ID input', async () => {
-    await page.click('#tabYoutube');
-    expect(await page.isVisible('#ytVideoId')).toBe(true);
-  });
-
-  it('switching back to Local tab shows URL input', async () => {
-    await page.click('#tabYoutube');
-    await page.click('#tabLocal');
-    expect(await page.isVisible('#videoUrl')).toBe(true);
-  });
-});
-
-// ── Queue interaction ──────────────────────────────────────────────────────
-
-describe('Video queue items', () => {
-  it('each queue item has a title', async () => {
-    const titles = await page.$$eval('.video-item__title', (els) =>
-      els.map((e) => e.textContent.trim()),
+  it('clicking Video activates the video view', async () => {
+    await page.click('#tab-video');
+    expect(await page.getAttribute('#tab-video', 'class')).toContain('active');
+    expect(await page.getAttribute('#view-video', 'class')).toContain('active');
+    expect(await page.getAttribute('#tab-music', 'class')).not.toContain(
+      'active',
     );
-    expect(titles.length).toBe(4);
-    titles.forEach((t) => expect(t.length).toBeGreaterThan(0));
   });
 
-  it('each queue item has a duration badge', async () => {
-    const badges = await page.$$('.video-item__duration');
-    expect(badges.length).toBe(4);
-  });
-
-  it('tapping a queue item updates the player title', async () => {
-    const items = await page.$$('.video-item');
-    await items[1].click();
-    await page.waitForTimeout(500);
-    const title = await page.textContent('#playerTitle');
-    expect(title).toContain('Elephants Dream');
-  });
-
-  it('tapping Big Buck Bunny updates URL input', async () => {
-    const items = await page.$$('.video-item');
-    await items[0].click();
-    const url = await page.inputValue('#videoUrl');
-    expect(url).toContain('BigBuckBunny');
+  it('clicking back to Music activates the music view', async () => {
+    await page.click('#tab-video');
+    await page.click('#tab-music');
+    expect(await page.getAttribute('#view-music', 'class')).toContain('active');
   });
 });
 
-// ── URL load ───────────────────────────────────────────────────────────────
+// ── Music transport controls ─────────────────────────────────────────────
 
-describe('Load button', () => {
-  it('typing a URL and clicking Load updates the player title', async () => {
-    await page.fill('#videoUrl', 'https://example.com/sample.mp4');
-    await page.click('button.load-btn');
-    const title = await page.textContent('#playerTitle');
-    expect(title).toBe('sample');
-  });
-});
-
-// ── Accessibility ──────────────────────────────────────────────────────────
-
-describe('Accessibility', () => {
-  it('progress bar has role=slider', async () => {
-    const role = await page.getAttribute('.jsp-progress', 'role');
-    expect(role).toBe('slider');
+describe('Music transport controls', () => {
+  it('renders shuffle, prev, play, next, repeat and a seek bar', async () => {
+    for (const id of [
+      '#shuffle',
+      '#prev',
+      '#playPause',
+      '#next',
+      '#repeat',
+      '#seek',
+    ]) {
+      expect(await page.locator(id).count()).toBe(1);
+    }
+    expect(await page.getAttribute('#playPause', 'aria-label')).toBe('Play');
   });
 
-  it('volume slider has aria-label', async () => {
-    const label = await page.getAttribute('.jsp-volume', 'aria-label');
-    expect(label).toBe('Volume');
-  });
-
-  it('speed selector has aria-label', async () => {
-    const label = await page.getAttribute('.jsp-speed', 'aria-label');
-    expect(label).toBe('Playback speed');
-  });
-
-  it('play button has aria-label', async () => {
-    const label = await page.getAttribute('.jsp-btn--play', 'aria-label');
-    expect(['Play', 'Pause', 'Replay']).toContain(label);
-  });
-
-  it('search icon button has aria-label', async () => {
-    const label = await page.getAttribute(
-      '.icon-btn[aria-label="Search"]',
-      'aria-label',
+  it('repeat button cycles none → all → one', async () => {
+    expect(await page.getAttribute('#repeat', 'aria-label')).toBe('Repeat');
+    await page.click('#repeat');
+    expect(await page.getAttribute('#repeat', 'aria-label')).toBe(
+      'Repeat: all',
     );
-    expect(label).toBe('Search');
+    await page.click('#repeat');
+    expect(await page.getAttribute('#repeat', 'aria-label')).toBe(
+      'Repeat: one',
+    );
+  });
+
+  it('shuffle toggles its active state', async () => {
+    expect(await page.getAttribute('#shuffle', 'class')).not.toContain('on');
+    await page.click('#shuffle');
+    expect(await page.getAttribute('#shuffle', 'class')).toContain('on');
   });
 });
 
-// ── Visual appearance ──────────────────────────────────────────────────────
+// ── Adding & playing a local audio file ──────────────────────────────────
 
-describe('Visual / responsive', () => {
-  it('phone frame is centred on desktop viewport', async () => {
-    const box = await page.locator('.phone-frame').boundingBox();
-    expect(box.x).toBeGreaterThan(200); // not flush to left edge
-    expect(box.width).toBeLessThanOrEqual(420); // max ~390px + border
-  });
+describe('Add and play a local song', () => {
+  it('adds an .mp3/.wav to the Music list and plays it', async () => {
+    // Inject a real File via DataTransfer (robust across Playwright/Chromium
+    // versions, unlike setInputFiles which needs an exact browser match).
+    const b64 = makeWav().toString('base64');
+    await page.evaluate((b64) => {
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const file = new File([bytes], 'My Test Song.wav', { type: 'audio/wav' });
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      const input = document.getElementById('fileInput');
+      input.files = dt.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }, b64);
 
-  it('bottom nav is positioned at the bottom of the phone frame', async () => {
-    const navBox = await page.locator('.bottom-nav').boundingBox();
-    const frameBox = await page.locator('.phone-frame').boundingBox();
-    const navBottom = navBox.y + navBox.height;
-    const frameBottom = frameBox.y + frameBox.height;
-    expect(Math.abs(navBottom - frameBottom)).toBeLessThan(10);
+    // It lands in the music list.
+    await page.waitForSelector('#musicList .item');
+    expect(await page.locator('#musicList .item').count()).toBe(1);
+    expect(await page.textContent('#musicList .item')).toContain(
+      'My Test Song',
+    );
+
+    // Tapping it loads the now-playing screen and shows the mini bar.
+    await page.click('#musicList .item');
+    expect(await page.textContent('#npTitle')).toContain('My Test Song');
+    expect(await page.getAttribute('#miniBar', 'class')).toContain('show');
+    expect(await page.getAttribute('#musicList .item', 'class')).toContain(
+      'playing',
+    );
   });
 });

@@ -1,737 +1,756 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <title>JS Player — Juhi Sohal Player</title>
-
-    <!-- PWA / Mobile meta -->
-    <meta
-      name="description"
-      content="Lightweight video player for local files and YouTube"
-    />
-    <meta name="theme-color" content="#0f0f0f" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta
-      name="apple-mobile-web-app-status-bar-style"
-      content="black-translucent"
-    />
-    <meta name="apple-mobile-web-app-title" content="JS Player" />
-    <meta name="application-name" content="JS Player" />
-    <meta name="msapplication-TileColor" content="#0f0f0f" />
-
-    <!-- Open Graph -->
-    <meta property="og:title" content="JS Player — Juhi Sohal Player" />
-    <meta
-      property="og:description"
-      content="Lightweight video player for local files and YouTube"
-    />
-    <meta property="og:type" content="website" />
-
-    <!-- Icons -->
+    <meta name="theme-color" content="#0b0f14" />
+    <title>JS Player</title>
     <link rel="icon" type="image/svg+xml" href="../public/icons/icon.svg" />
-    <link rel="apple-touch-icon" href="../public/icons/icon-192.png" />
     <link rel="manifest" href="../public/manifest.json" />
-
-    <!-- player.css is imported via the module script below so Vite bundles it
-         (the file lives outside this demo/ root, so a plain <link> 404s). -->
     <style>
-      /* ── Reset & base ───────────────────────────────────────────────────── */
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
+      :root {
+        --bg: #0b0f14;
+        --surface: #141a22;
+        --surface-2: #1c2530;
+        --line: #243040;
+        --text: #eef3f8;
+        --muted: #8b9bb0;
+        --accent: #2f7bf6; /* MX-style blue */
+        --accent-2: #00c2a8;
       }
-
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html,
       body {
-        background: #121212;
-        color: #fff;
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
         font-family:
           -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        min-height: 100dvh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-      }
-
-      /* ── Phone frame ────────────────────────────────────────────────────── */
-      .phone-frame {
-        width: 390px;
-        min-height: 844px;
-        background: #0f0f0f;
-        border-radius: 50px;
-        border: 8px solid #2a2a2a;
-        box-shadow:
-          0 0 0 2px #111,
-          0 0 0 3px #3a3a3a,
-          0 40px 80px rgba(0, 0, 0, 0.8);
-        position: relative;
-        overflow: hidden;
         display: flex;
         flex-direction: column;
+        min-height: 100vh;
       }
-
-      /* Notch */
-      .phone-frame::before {
-        content: '';
-        position: absolute;
+      /* ── App bar ─────────────────────────────────────────── */
+      .appbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+        position: sticky;
         top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 126px;
-        height: 34px;
-        background: #0f0f0f;
-        border-radius: 0 0 20px 20px;
-        z-index: 10;
+        z-index: 20;
       }
-
-      /* ── Status bar ─────────────────────────────────────────────────────── */
-      .status-bar {
-        height: 50px;
-        padding: 14px 28px 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        font-size: 12px;
-        font-weight: 600;
-        color: #fff;
-        flex-shrink: 0;
-      }
-
-      .status-bar__time {
-        letter-spacing: 0.02em;
-      }
-      .status-bar__icons {
-        display: flex;
-        gap: 6px;
-        align-items: center;
-      }
-
-      /* ── App header ─────────────────────────────────────────────────────── */
-      .app-header {
-        padding: 4px 20px 12px;
+      .brand {
         display: flex;
         align-items: center;
         gap: 10px;
-        flex-shrink: 0;
       }
-
-      .app-logo {
-        width: 32px;
-        height: 32px;
-        background: linear-gradient(135deg, #e53935, #ff5252);
+      .brand__mark {
+        width: 30px;
+        height: 30px;
         border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        display: grid;
+        place-items: center;
         font-size: 16px;
-        flex-shrink: 0;
       }
-
-      .app-name {
-        font-size: 20px;
-        font-weight: 700;
-        background: linear-gradient(90deg, #e53935, #ff8a65);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+      .app-title {
+        font-weight: 800;
+        font-size: 18px;
+        letter-spacing: 0.2px;
       }
-
-      .app-header__spacer {
+      .spacer {
         flex: 1;
       }
-
-      .icon-btn {
-        background: rgba(255, 255, 255, 0.06);
-        border: none;
-        color: #fff;
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        display: flex;
+      .add-btn {
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
-        font-size: 16px;
+        gap: 8px;
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        font-weight: 700;
+        padding: 9px 14px;
+        border-radius: 10px;
         cursor: pointer;
       }
-
-      /* ── Scrollable content ─────────────────────────────────────────────── */
-      .app-content {
+      .add-btn:active {
+        transform: scale(0.97);
+      }
+      /* ── Tabs ────────────────────────────────────────────── */
+      .tabs {
+        display: flex;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+      }
+      .tab {
+        flex: 1;
+        background: none;
+        border: none;
+        color: var(--muted);
+        padding: 13px 0;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+        border-bottom: 2.5px solid transparent;
+        letter-spacing: 0.3px;
+      }
+      .tab.active {
+        color: var(--text);
+        border-bottom-color: var(--accent);
+      }
+      /* ── Views ───────────────────────────────────────────── */
+      main {
         flex: 1;
         overflow-y: auto;
-        padding-bottom: 80px;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
+        padding-bottom: 84px;
       }
-      .app-content::-webkit-scrollbar {
+      .view {
         display: none;
       }
-
-      /* ── Section header ─────────────────────────────────────────────────── */
-      .section-header {
-        padding: 16px 20px 10px;
+      .view.active {
+        display: block;
+      }
+      .empty {
+        text-align: center;
+        color: var(--muted);
+        padding: 64px 24px;
+      }
+      .empty .ico {
+        font-size: 44px;
+        opacity: 0.6;
+      }
+      .empty p {
+        margin: 14px 0 0;
+      }
+      .link-btn {
+        color: var(--accent);
+        background: none;
+        border: none;
+        font: inherit;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+      /* ── Lists ───────────────────────────────────────────── */
+      .list {
+        list-style: none;
+        margin: 0;
+        padding: 6px 0;
+      }
+      .item {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-      }
-
-      .section-title {
-        font-size: 16px;
-        font-weight: 700;
-      }
-
-      .section-link {
-        font-size: 13px;
-        color: #e53935;
-        text-decoration: none;
+        gap: 14px;
+        padding: 11px 16px;
         cursor: pointer;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+        color: var(--text);
       }
-
-      /* ── Player card ────────────────────────────────────────────────────── */
-      .player-card {
-        margin: 0 16px 20px;
-        border-radius: 16px;
+      .item:active {
+        background: var(--surface-2);
+      }
+      .item.playing {
+        background: var(--surface-2);
+      }
+      .item.playing .item__name {
+        color: var(--accent);
+      }
+      .item__icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 9px;
+        flex: none;
+        background: var(--surface-2);
+        display: grid;
+        place-items: center;
+        font-size: 20px;
         overflow: hidden;
-        background: #1a1a1a;
-        border: 1px solid #2a2a2a;
       }
-
-      .player-card .jsp-player {
-        border-radius: 0;
-        box-shadow: none;
+      .item__icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
-
-      .player-info {
-        padding: 12px 14px;
-        border-top: 1px solid #2a2a2a;
+      .item__meta {
+        min-width: 0;
+        flex: 1;
       }
-
-      .player-info__title {
-        font-size: 14px;
+      .item__name {
         font-weight: 600;
+        font-size: 15px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
-
-      .player-info__meta {
-        font-size: 12px;
-        color: #888;
-        margin-top: 3px;
+      .item__sub {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin-top: 2px;
       }
-
-      /* ── Source tabs ────────────────────────────────────────────────────── */
-      .source-tabs {
-        display: flex;
-        gap: 8px;
-        padding: 0 16px 14px;
+      /* ── Video stage ─────────────────────────────────────── */
+      .stage {
+        background: #000;
+        width: 100%;
+        aspect-ratio: 16/9;
+        display: block;
       }
-
-      .source-tab {
-        flex: 1;
-        padding: 9px;
-        border-radius: 10px;
-        border: 1.5px solid #2a2a2a;
-        background: transparent;
-        color: #888;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        text-align: center;
-        transition: all 0.15s;
+      .stage[hidden] {
+        display: none;
       }
-
-      .source-tab.active {
-        border-color: #e53935;
-        color: #e53935;
-        background: rgba(229, 57, 53, 0.08);
+      #media {
+        width: 100%;
+        height: 100%;
+        background: #000;
+        display: block;
       }
-
-      /* ── Video URL input ────────────────────────────────────────────────── */
-      .input-row {
-        display: flex;
-        gap: 8px;
-        padding: 0 16px 16px;
-      }
-
-      .url-input {
-        flex: 1;
-        background: #1a1a1a;
-        border: 1.5px solid #2a2a2a;
-        border-radius: 10px;
-        color: #fff;
-        font-size: 13px;
-        padding: 10px 12px;
-        outline: none;
-        transition: border-color 0.15s;
-      }
-
-      .url-input::placeholder {
-        color: #555;
-      }
-      .url-input:focus {
-        border-color: #e53935;
-      }
-
-      .load-btn {
-        background: #e53935;
-        border: none;
-        border-radius: 10px;
-        color: #fff;
-        font-size: 13px;
+      .stage-title {
+        padding: 12px 16px 4px;
         font-weight: 700;
-        padding: 10px 16px;
-        cursor: pointer;
-        white-space: nowrap;
-        transition: background 0.15s;
       }
-
-      .load-btn:active {
-        background: #c62828;
+      /* ── Now Playing (music) ─────────────────────────────── */
+      .np {
+        padding: 22px 22px 6px;
+        text-align: center;
       }
-
-      /* ── Video list ─────────────────────────────────────────────────────── */
-      .video-list {
-        padding: 0 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .video-item {
-        display: flex;
-        gap: 10px;
-        align-items: flex-start;
-        cursor: pointer;
-        padding: 8px;
-        border-radius: 12px;
-        transition: background 0.12s;
-      }
-
-      .video-item:active {
-        background: rgba(255, 255, 255, 0.06);
-      }
-
-      .video-item__thumb {
-        width: 100px;
-        height: 62px;
-        background: #1e1e1e;
-        border-radius: 8px;
-        flex-shrink: 0;
-        position: relative;
+      .np__art {
+        width: min(70vw, 300px);
+        aspect-ratio: 1;
+        margin: 0 auto;
+        border-radius: 18px;
         overflow: hidden;
+        background: var(--surface-2);
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
       }
-
-      .video-item__thumb img {
+      .np__art img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        display: block;
       }
-
-      .video-item__thumb-placeholder {
-        width: 100%;
-        height: 100%;
+      .np__title {
+        font-weight: 800;
+        font-size: 18px;
+        margin: 18px 0 2px;
+      }
+      .np__sub {
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .seek {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 22px 2px;
+      }
+      .seek input {
+        flex: 1;
+      }
+      .seek .t {
+        font-size: 12px;
+        color: var(--muted);
+        width: 42px;
+      }
+      .seek .t.r {
+        text-align: right;
+      }
+      input[type='range'] {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 4px;
+        border-radius: 3px;
+        background: var(--line);
+        outline: none;
+      }
+      input[type='range']::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        background: var(--accent);
+        cursor: pointer;
+      }
+      input[type='range']::-moz-range-thumb {
+        width: 15px;
+        height: 15px;
+        border: none;
+        border-radius: 50%;
+        background: var(--accent);
+      }
+      .transport {
         display: flex;
         align-items: center;
         justify-content: center;
+        gap: 10px;
+        padding: 12px 0 8px;
+      }
+      .tbtn {
+        background: none;
+        border: none;
+        color: var(--text);
+        cursor: pointer;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
         font-size: 22px;
-        background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+        display: grid;
+        place-items: center;
       }
-
-      .video-item__duration {
-        position: absolute;
-        bottom: 4px;
-        right: 4px;
-        background: rgba(0, 0, 0, 0.8);
-        border-radius: 4px;
-        font-size: 10px;
-        padding: 1px 4px;
+      .tbtn:active {
+        background: var(--surface-2);
+      }
+      .tbtn.toggle.on {
+        color: var(--accent);
+      }
+      .tbtn--play {
+        background: var(--accent);
         color: #fff;
+        width: 68px;
+        height: 68px;
+        font-size: 28px;
+        box-shadow: 0 8px 22px rgba(47, 123, 246, 0.45);
       }
-
-      .video-item__info {
+      /* ── Mini player ─────────────────────────────────────── */
+      .mini {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 30;
+        display: none;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--surface-2);
+        border-top: 1px solid var(--line);
+      }
+      .mini.show {
+        display: flex;
+      }
+      .mini__art {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex: none;
+        background: var(--surface);
+      }
+      .mini__art img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .mini__meta {
         flex: 1;
         min-width: 0;
       }
-
-      .video-item__title {
-        font-size: 13px;
-        font-weight: 600;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
+      .mini__title {
+        font-weight: 700;
+        font-size: 13.5px;
+        white-space: nowrap;
         overflow: hidden;
-        line-height: 1.4;
+        text-overflow: ellipsis;
       }
-
-      .video-item__meta {
-        font-size: 11px;
-        color: #666;
-        margin-top: 4px;
+      .mini__sub {
+        color: var(--muted);
+        font-size: 11.5px;
       }
-
-      /* ── Bottom navigation ──────────────────────────────────────────────── */
-      .bottom-nav {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: rgba(15, 15, 15, 0.92);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border-top: 1px solid #1f1f1f;
-        display: flex;
-        padding-bottom: env(safe-area-inset-bottom, 8px);
-      }
-
-      .nav-item {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 10px 0 8px;
-        gap: 3px;
-        cursor: pointer;
-        border: none;
+      .mini button {
         background: none;
-        color: #555;
-        font-size: 10px;
-        font-weight: 500;
-        transition: color 0.15s;
+        border: none;
+        color: var(--text);
+        font-size: 22px;
+        cursor: pointer;
+        padding: 6px;
       }
-
-      .nav-item.active {
-        color: #e53935;
-      }
-      .nav-item__icon {
-        font-size: 20px;
-      }
-
-      /* ── YouTube badge ──────────────────────────────────────────────────── */
-      .yt-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background: rgba(255, 0, 0, 0.12);
-        border: 1px solid rgba(255, 0, 0, 0.25);
-        border-radius: 6px;
-        padding: 3px 8px;
-        font-size: 11px;
-        color: #ff5252;
-        font-weight: 600;
-      }
-
-      /* ── Scrolling marquee for long titles ──────────────────────────────── */
-      @keyframes marquee {
-        0% {
-          transform: translateX(0);
-        }
-        100% {
-          transform: translateX(-50%);
-        }
+      .sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
       }
     </style>
   </head>
   <body>
-    <div class="phone-frame">
-      <!-- Status Bar -->
-      <div class="status-bar">
-        <span class="status-bar__time" id="statusTime">9:41</span>
-        <div class="status-bar__icons">
-          <span>●●●</span>
-          <span>WiFi</span>
-          <span>🔋</span>
-        </div>
+    <header class="appbar">
+      <div class="brand">
+        <div class="brand__mark">▶</div>
+        <div class="app-title">JS Player</div>
       </div>
+      <div class="spacer"></div>
+      <button class="add-btn" id="addBtn" aria-label="Add songs or videos">
+        ＋ Add
+      </button>
+      <input
+        id="fileInput"
+        class="sr"
+        type="file"
+        accept="audio/*,video/*,.mp3,.m4a,.aac,.wav,.ogg,.mp4,.m4v,.webm,.mkv,.mov"
+        multiple
+      />
+    </header>
 
-      <!-- App Header -->
-      <div class="app-header">
-        <div class="app-logo">▶</div>
-        <span class="app-name">JS Player</span>
-        <div class="app-header__spacer"></div>
-        <button class="icon-btn" aria-label="Search">🔍</button>
-        <button class="icon-btn" aria-label="More">⋯</button>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" id="tab-music" role="tab" aria-selected="true">
+        MUSIC
+      </button>
+      <button class="tab" id="tab-video" role="tab" aria-selected="false">
+        VIDEO
+      </button>
+    </nav>
+
+    <main>
+      <!-- ── Music ─────────────────────────────────────────── -->
+      <section
+        class="view active"
+        id="view-music"
+        role="tabpanel"
+        aria-label="Music"
+      >
+        <div class="np" id="nowPlaying">
+          <div class="np__art"><img id="npArt" alt="Album art" /></div>
+          <div class="np__title" id="npTitle">Nothing playing</div>
+          <div class="np__sub" id="npSub">—</div>
+          <div class="seek">
+            <span class="t" id="curTime">0:00</span>
+            <input
+              id="seek"
+              type="range"
+              min="0"
+              max="100"
+              value="0"
+              step="0.1"
+              aria-label="Seek"
+            />
+            <span class="t r" id="durTime">0:00</span>
+          </div>
+          <div class="transport">
+            <button class="tbtn toggle" id="shuffle" aria-label="Shuffle">
+              🔀
+            </button>
+            <button class="tbtn" id="prev" aria-label="Previous">⏮</button>
+            <button class="tbtn tbtn--play" id="playPause" aria-label="Play">
+              ▶
+            </button>
+            <button class="tbtn" id="next" aria-label="Next">⏭</button>
+            <button class="tbtn toggle" id="repeat" aria-label="Repeat">
+              🔁
+            </button>
+          </div>
+        </div>
+        <ul class="list" id="musicList"></ul>
+        <div class="empty" id="musicEmpty">
+          <div class="ico">🎵</div>
+          <p>
+            No songs yet.<br /><button class="link-btn" data-add>
+              Add .mp3 files
+            </button>
+            to start listening.
+          </p>
+        </div>
+      </section>
+
+      <!-- ── Video ─────────────────────────────────────────── -->
+      <section class="view" id="view-video" role="tabpanel" aria-label="Video">
+        <div class="stage" id="videoStage" hidden>
+          <video id="media" playsinline preload="metadata" controls></video>
+        </div>
+        <div class="stage-title" id="videoTitle" hidden></div>
+        <ul class="list" id="videoList"></ul>
+        <div class="empty" id="videoEmpty">
+          <div class="ico">🎬</div>
+          <p>
+            No videos yet.<br /><button class="link-btn" data-add>
+              Add .mp4 files
+            </button>
+            to start watching.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <!-- ── Mini player ─────────────────────────────────────── -->
+    <div class="mini" id="miniBar">
+      <div class="mini__art"><img id="miniArt" alt="" /></div>
+      <div class="mini__meta">
+        <div class="mini__title" id="miniTitle">—</div>
+        <div class="mini__sub" id="miniSub"></div>
       </div>
-
-      <!-- Scrollable Content -->
-      <div class="app-content">
-        <!-- Source Tabs -->
-        <div class="source-tabs">
-          <button
-            class="source-tab active"
-            id="tabLocal"
-            onclick="switchTab('local')"
-          >
-            📁 Local
-          </button>
-          <button
-            class="source-tab"
-            id="tabYoutube"
-            onclick="switchTab('youtube')"
-          >
-            ▶ YouTube
-          </button>
-        </div>
-
-        <!-- URL Input -->
-        <div class="input-row" id="localInputRow">
-          <input
-            class="url-input"
-            id="videoUrl"
-            type="url"
-            placeholder="Paste a .mp4 / .webm URL…"
-            value="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-          />
-          <button class="load-btn" onclick="loadLocal()">Load</button>
-        </div>
-
-        <div class="input-row" id="youtubeInputRow" style="display: none">
-          <input
-            class="url-input"
-            id="ytVideoId"
-            placeholder="YouTube video ID (e.g. dQw4w9WgXcQ)"
-          />
-          <button class="load-btn" onclick="loadYouTube()">Play</button>
-        </div>
-
-        <!-- ── Player ── -->
-        <div class="player-card">
-          <div id="playerMount" class="jsp-player"></div>
-          <div class="player-info">
-            <div class="player-info__title" id="playerTitle">
-              Big Buck Bunny
-            </div>
-            <div class="player-info__meta" id="playerMeta">
-              Open-source sample · Blender Foundation
-              <span id="ytBadge" class="yt-badge" style="display: none"
-                >▶ YouTube</span
-              >
-            </div>
-          </div>
-        </div>
-
-        <!-- Now Playing section -->
-        <div class="section-header">
-          <span class="section-title">Up Next</span>
-          <span class="section-link">Shuffle</span>
-        </div>
-
-        <div class="video-list">
-          <div
-            class="video-item"
-            onclick="
-              queueLocal(
-                'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-                'Big Buck Bunny',
-                'Blender · 9:56',
-              )
-            "
-          >
-            <div class="video-item__thumb">
-              <div class="video-item__thumb-placeholder">🐰</div>
-              <span class="video-item__duration">9:56</span>
-            </div>
-            <div class="video-item__info">
-              <div class="video-item__title">Big Buck Bunny</div>
-              <div class="video-item__meta">Blender Foundation · MP4</div>
-            </div>
-          </div>
-
-          <div
-            class="video-item"
-            onclick="
-              queueLocal(
-                'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-                'Elephants Dream',
-                'Blender · 10:54',
-              )
-            "
-          >
-            <div class="video-item__thumb">
-              <div class="video-item__thumb-placeholder">🐘</div>
-              <span class="video-item__duration">10:54</span>
-            </div>
-            <div class="video-item__info">
-              <div class="video-item__title">Elephants Dream</div>
-              <div class="video-item__meta">Blender Foundation · MP4</div>
-            </div>
-          </div>
-
-          <div
-            class="video-item"
-            onclick="
-              queueLocal(
-                'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-                'For Bigger Blazes',
-                'Google · 0:15',
-              )
-            "
-          >
-            <div class="video-item__thumb">
-              <div class="video-item__thumb-placeholder">🔥</div>
-              <span class="video-item__duration">0:15</span>
-            </div>
-            <div class="video-item__info">
-              <div class="video-item__title">For Bigger Blazes</div>
-              <div class="video-item__meta">Google Sample · MP4</div>
-            </div>
-          </div>
-
-          <div
-            class="video-item"
-            onclick="
-              queueLocal(
-                'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
-                'Subaru Outback',
-                'Google · 0:22',
-              )
-            "
-          >
-            <div class="video-item__thumb">
-              <div class="video-item__thumb-placeholder">🚗</div>
-              <span class="video-item__duration">0:22</span>
-            </div>
-            <div class="video-item__info">
-              <div class="video-item__title">Subaru Outback</div>
-              <div class="video-item__meta">Google Sample · MP4</div>
-            </div>
-          </div>
-        </div>
-        <!-- /video-list -->
-
-        <div style="height: 16px"></div>
-      </div>
-      <!-- /app-content -->
-
-      <!-- Bottom Nav -->
-      <nav class="bottom-nav">
-        <button class="nav-item active">
-          <span class="nav-item__icon">🏠</span>Home
-        </button>
-        <button class="nav-item">
-          <span class="nav-item__icon">📚</span>Library
-        </button>
-        <button class="nav-item">
-          <span class="nav-item__icon">▶</span>YouTube
-        </button>
-        <button class="nav-item">
-          <span class="nav-item__icon">🔍</span>Search
-        </button>
-        <button class="nav-item">
-          <span class="nav-item__icon">⚙️</span>Settings
-        </button>
-      </nav>
+      <button id="miniPrev" aria-label="Previous">⏮</button>
+      <button id="miniPlay" aria-label="Play">▶</button>
+      <button id="miniNext" aria-label="Next">⏭</button>
     </div>
-    <!-- /phone-frame -->
 
     <script type="module">
-      import '../src/styles/player.css';
-      import { createPlayer } from '../src/index.js';
+      import { LocalPlayer, formatTime } from '../src/index.js';
+      import coverUrl from './cover.jpg';
 
-      // ── Bootstrap local player ───────────────────────────────────────────────
-      let instance = createPlayer('#playerMount', 'local');
-      let ytInstance = null;
-      let currentTab = 'local';
+      const $ = (id) => document.getElementById(id);
+      const COVER = coverUrl;
+      $('npArt').src = COVER;
+      $('miniArt').src = COVER;
 
-      // Auto-load sample on start
-      instance.player.load(
-        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-      );
+      // ── Playback engine (library) ──────────────────────────
+      const media = $('media');
+      const player = new LocalPlayer(media);
 
-      // ── Live status bar clock ────────────────────────────────────────────────
-      function tick() {
-        const now = new Date();
-        document.getElementById('statusTime').textContent =
-          now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      }
-      tick();
-      setInterval(tick, 30000);
+      // ── State ──────────────────────────────────────────────
+      let lib = []; // {id,name,url,type:'audio'|'video',duration}
+      let order = []; // ids in play order
+      let currentId = null;
+      let shuffle = false;
+      let repeat = 'none'; // none | all | one
+      let uid = 0;
 
-      // ── Tab switching ────────────────────────────────────────────────────────
-      window.switchTab = (tab) => {
-        currentTab = tab;
-        document
-          .getElementById('tabLocal')
-          .classList.toggle('active', tab === 'local');
-        document
-          .getElementById('tabYoutube')
-          .classList.toggle('active', tab === 'youtube');
-        document.getElementById('localInputRow').style.display =
-          tab === 'local' ? '' : 'none';
-        document.getElementById('youtubeInputRow').style.display =
-          tab === 'youtube' ? '' : 'none';
-        document.getElementById('ytBadge').style.display =
-          tab === 'youtube' ? '' : 'none';
+      const byId = (id) => lib.find((x) => x.id === id);
+      const listOf = (type) => lib.filter((x) => x.type === type);
 
-        if (tab === 'youtube' && !ytInstance) {
-          // Rebuild mount for YouTube player
-          instance.player.destroy();
-          const mount = document.getElementById('playerMount');
-          mount.innerHTML = '';
-          mount.className = 'jsp-player';
-          ytInstance = createPlayer(mount, 'youtube');
-          instance = ytInstance;
-        } else if (tab === 'local' && ytInstance) {
-          ytInstance.player.destroy();
-          ytInstance = null;
-          const mount = document.getElementById('playerMount');
-          mount.innerHTML = '';
-          mount.className = 'jsp-player';
-          instance = createPlayer(mount, 'local');
+      // ── Add files ──────────────────────────────────────────
+      $('addBtn').onclick = () => $('fileInput').click();
+      document
+        .querySelectorAll('[data-add]')
+        .forEach((b) => (b.onclick = () => $('fileInput').click()));
+
+      $('fileInput').onchange = (e) => {
+        const files = [...e.target.files];
+        let firstAudio = null,
+          firstVideo = null;
+        for (const f of files) {
+          const isAudio =
+            f.type.startsWith('audio') ||
+            /\.(mp3|m4a|aac|wav|ogg|flac)$/i.test(f.name);
+          const item = {
+            id: ++uid,
+            name: f.name.replace(/\.[^.]+$/, ''),
+            url: URL.createObjectURL(f),
+            type: isAudio ? 'audio' : 'video',
+            duration: 0,
+          };
+          lib.push(item);
+          probeDuration(item);
+          if (isAudio && firstAudio === null) firstAudio = item.id;
+          if (!isAudio && firstVideo === null) firstVideo = item.id;
         }
+        e.target.value = '';
+        render();
+        // Jump to the tab matching what was added
+        if (firstAudio !== null) switchTab('music');
+        else if (firstVideo !== null) switchTab('video');
       };
 
-      // ── Load local video ─────────────────────────────────────────────────────
-      window.loadLocal = () => {
-        const url = document.getElementById('videoUrl').value.trim();
-        if (!url) return;
-        if (currentTab !== 'local') window.switchTab('local');
-        instance.player.load(url);
-        instance.player.play();
-        document.getElementById('playerTitle').textContent = url
-          .split('/')
-          .pop()
-          .replace(/\.[^.]+$/, '');
-        document.getElementById('playerMeta').textContent = 'Local file';
+      function probeDuration(item) {
+        const el = document.createElement(
+          item.type === 'audio' ? 'audio' : 'video',
+        );
+        el.preload = 'metadata';
+        el.src = item.url;
+        el.onloadedmetadata = () => {
+          item.duration = el.duration || 0;
+          render();
+        };
+      }
+
+      // ── Rendering ──────────────────────────────────────────
+      function render() {
+        renderList('audio', $('musicList'), $('musicEmpty'));
+        renderList('video', $('videoList'), $('videoEmpty'));
+      }
+
+      function renderList(type, ul, empty) {
+        const items = listOf(type);
+        empty.style.display = items.length ? 'none' : '';
+        ul.innerHTML = '';
+        for (const it of items) {
+          const li = document.createElement('button');
+          li.className = 'item' + (it.id === currentId ? ' playing' : '');
+          li.dataset.id = it.id;
+          const icon =
+            type === 'audio' ? `<img src="${COVER}" alt="" />` : '🎬';
+          li.innerHTML =
+            `<div class="item__icon">${icon}</div>` +
+            `<div class="item__meta">` +
+            `<div class="item__name">${escapeHtml(it.name)}</div>` +
+            `<div class="item__sub">${type === 'audio' ? 'Audio' : 'Video'} · ${it.duration ? formatTime(it.duration) : '--:--'}</div>` +
+            `</div>`;
+          li.onclick = () => playItem(it.id);
+          ul.appendChild(li);
+        }
+      }
+
+      function escapeHtml(s) {
+        return s.replace(
+          /[&<>"]/g,
+          (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c],
+        );
+      }
+
+      // ── Playback ───────────────────────────────────────────
+      function buildOrder(type) {
+        const ids = listOf(type).map((x) => x.id);
+        if (shuffle) {
+          for (let i = ids.length - 1; i > 0; i--) {
+            const j = Math.floor((i + 1) * pseudoRandom(i));
+            [ids[i], ids[j]] = [ids[j], ids[i]];
+          }
+        }
+        order = ids;
+      }
+      // deterministic-ish shuffle helper (no Math.random dependency issues)
+      function pseudoRandom(seed) {
+        const x = Math.sin((seed + 1) * 99991) * 10000;
+        return x - Math.floor(x);
+      }
+
+      function playItem(id) {
+        const it = byId(id);
+        if (!it) return;
+        currentId = id;
+        buildOrder(it.type);
+        player.load(it.url);
+        player.play();
+
+        const isAudio = it.type === 'audio';
+        $('videoStage').hidden = !!isAudio;
+        $('videoTitle').hidden = isAudio;
+        $('videoTitle').textContent = it.name;
+        switchTab(isAudio ? 'music' : 'video');
+
+        $('npTitle').textContent = it.name;
+        $('npSub').textContent = isAudio ? 'Audio' : 'Video';
+        updateMini();
+        render();
+      }
+
+      function neighbour(dir) {
+        const idx = order.indexOf(currentId);
+        if (idx === -1) return null;
+        let n = idx + dir;
+        if (n < 0) n = repeat === 'all' ? order.length - 1 : 0;
+        if (n >= order.length) n = repeat === 'all' ? 0 : order.length - 1;
+        return order[n];
+      }
+
+      $('playPause').onclick = $('miniPlay').onclick = () => {
+        if (currentId === null) {
+          const first = listOf('audio')[0] || listOf('video')[0];
+          if (first) playItem(first.id);
+          return;
+        }
+        player.paused ? player.play() : player.pause();
+      };
+      $('prev').onclick = $('miniPrev').onclick = () => {
+        if (player.currentTime > 3) return player.seek(0);
+        const id = neighbour(-1);
+        if (id != null) playItem(id);
+      };
+      $('next').onclick = $('miniNext').onclick = () => {
+        const id = neighbour(1);
+        if (id != null && id !== currentId) playItem(id);
+      };
+      $('shuffle').onclick = () => {
+        shuffle = !shuffle;
+        $('shuffle').classList.toggle('on', shuffle);
+        const cur = byId(currentId);
+        if (cur) buildOrder(cur.type);
+      };
+      $('repeat').onclick = () => {
+        repeat = repeat === 'none' ? 'all' : repeat === 'all' ? 'one' : 'none';
+        const r = $('repeat');
+        r.classList.toggle('on', repeat !== 'none');
+        r.textContent = repeat === 'one' ? '🔂' : '🔁';
+        r.setAttribute('aria-label', 'Repeat: ' + repeat);
       };
 
-      // ── Load YouTube video ───────────────────────────────────────────────────
-      window.loadYouTube = () => {
-        const id = document.getElementById('ytVideoId').value.trim();
-        if (!id) return;
-        if (currentTab !== 'youtube') window.switchTab('youtube');
-        instance.player.load(id);
-        document.getElementById('playerTitle').textContent = `YouTube: ${id}`;
-        document.getElementById('playerMeta').innerHTML =
-          '<span class="yt-badge">▶ YouTube</span>';
+      // ── Seek ───────────────────────────────────────────────
+      const seek = $('seek');
+      let seeking = false;
+      seek.addEventListener('input', () => {
+        seeking = true;
+        $('curTime').textContent = formatTime(seek.value);
+      });
+      seek.addEventListener('change', () => {
+        player.seek(parseFloat(seek.value));
+        seeking = false;
+      });
+
+      // ── Player events → UI ─────────────────────────────────
+      player.on('timeupdate', (cur, dur) => {
+        if (!seeking) {
+          seek.value = cur;
+        }
+        seek.max = dur || 0;
+        $('curTime').textContent = formatTime(cur);
+        $('durTime').textContent = formatTime(dur);
+      });
+      player.on('durationchange', (dur) => {
+        seek.max = dur || 0;
+        $('durTime').textContent = formatTime(dur);
+      });
+      const reflectPlaying = (playing) => {
+        const sym = playing ? '⏸' : '▶';
+        $('playPause').textContent = sym;
+        $('miniPlay').textContent = sym;
+        $('playPause').setAttribute('aria-label', playing ? 'Pause' : 'Play');
       };
+      player.on('play', () => reflectPlaying(true));
+      player.on('pause', () => reflectPlaying(false));
+      player.on('ended', () => {
+        if (repeat === 'one') {
+          player.seek(0);
+          player.play();
+          return;
+        }
+        const id = neighbour(1);
+        const idx = order.indexOf(currentId);
+        const atEnd = idx === order.length - 1;
+        if (id != null && (!atEnd || repeat === 'all') && id !== currentId)
+          playItem(id);
+        else reflectPlaying(false);
+      });
 
-      // ── Queue items ──────────────────────────────────────────────────────────
-      window.queueLocal = (url, title, meta) => {
-        if (currentTab !== 'local') window.switchTab('local');
-        instance.player.load(url);
-        instance.player.play();
-        document.getElementById('playerTitle').textContent = title;
-        document.getElementById('playerMeta').textContent = meta;
-        document.getElementById('videoUrl').value = url;
-      };
+      function updateMini() {
+        const it = byId(currentId);
+        const bar = $('miniBar');
+        if (!it) {
+          bar.classList.remove('show');
+          return;
+        }
+        bar.classList.add('show');
+        $('miniTitle').textContent = it.name;
+        $('miniSub').textContent = it.type === 'audio' ? 'Audio' : 'Video';
+      }
 
-      // ── Deep-link: ?tab=youtube ──────────────────────────────────────────────
-      const initTab = new URLSearchParams(location.search).get('tab');
-      if (initTab === 'youtube') window.switchTab('youtube');
+      // ── Tabs ───────────────────────────────────────────────
+      function switchTab(name) {
+        for (const t of ['music', 'video']) {
+          const on = t === name;
+          $('tab-' + t).classList.toggle('active', on);
+          $('tab-' + t).setAttribute('aria-selected', String(on));
+          $('view-' + t).classList.toggle('active', on);
+        }
+      }
+      $('tab-music').onclick = () => switchTab('music');
+      $('tab-video').onclick = () => switchTab('video');
 
-      // ── Service Worker (PWA / offline) ──────────────────────────────────────
+      // initial paint
+      render();
+
+      // PWA (best-effort, non-fatal)
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('../public/sw.js').catch(() => {});
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
       }
     </script>
   </body>
